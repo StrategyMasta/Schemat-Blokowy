@@ -1,0 +1,89 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    overflow: hidden;
+}
+
+#bloki, #tools, #output {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 200px;
+    height: 700px;
+    border: 2px solid black;
+    border-radius: 7px;
+    text-align: center;
+    padding: 7px;
+    background-color: white;
+    cursor: move;
+    z-index: 1;
+}
+
+#tools {
+    left: calc(100% - 303px);
+    width: 300px;
+    height: 100px;
+}
+
+#cable {
+    border: 1px solid black;
+}
+
+#output {
+    top: 106px;
+    left: calc(100% - 303px);
+    width: 300px;
+    height: 400px;
+}
+
+h2 {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+hr {
+    width: 80%;
+    height: 3px;
+    margin-left: 10%;
+    background-color: black;
+}
+
+.wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+canvas {
+    cursor: grab;
+}
+
+canvas:active {
+    cursor: grabbing;
+}
+
+#cables, #preview {
+    position: absolute;
+    pointer-events: none;
+    cursor: pointer;
+    z-index: 0;
+}
+
+#trash {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 100px;
+    height: 150px;
+    cursor: grab;
+    z-index: 5;
+}
+
+#trash:active {
+    cursor: grabbing;
+}
