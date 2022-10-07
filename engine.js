@@ -30,12 +30,13 @@ const engine = (function() {
             });
         }
 
-        addCable(cable, el1, el2, arrow) {
+        addCable(cable, el1, el2, arrow, linkers) {
             _(this).cables.push({
                 cable,
                 from: el1,
                 to: el2,
-                arrow
+                arrow,
+                linkers
             });
         }
 
@@ -152,6 +153,58 @@ const engine = (function() {
             return undefined;
         }
 
+        setUsed(linker1, linker2) {
+            for(let item of _(this).elements)
+                for(let i = 0; i < 4; i++)
+                    if(Object.is(item.linkers[i], linker1) || Object.is(item.linkers[i], linker2))
+                        item.linkers[i].used = true;
+        }
+
+        usedLinkers(el) {
+            for(let elem of _(this).elements)
+                if(Object.is(elem.el, el))
+                    return elem.linkers.some(item => item.used);
+        }
+
+        getLinker(canvas, linkers) {
+            for(let elem of _(this).elements)
+                if(Object.is(elem.el, canvas))
+                    for(let linker of elem.linkers)
+                        if(Object.is(linker, linkers[0]) || Object.is(linker, linkers[1]))
+                            return linker;
+        }
+
+        getCables(el) {
+            let cables = [];
+            for(let cable of _(this).cables)
+                if(Object.is(cable.from, el) || Object.is(cable.to, el))
+                    cables.push(cable);
+
+            return cables;
+        }
+
+        updateCable(from, to, newCable, arrow) {
+            for(let cable of _(this).cables)
+                if(Object.is(cable.from, from) && Object.is(cable.to, to)) {
+                    cable.cable = newCable;
+                    cable.arrow = arrow;
+                    return;
+                }
+        }
+
+        validateCable(from, linker1, linker2) {
+            let ifConnections = 0;
+            for(let cable of _(this).cables) {
+                if(Object.is(cable.from, from) && from.className == "if")
+                    ifConnections++;
+                if((Object.is(cable.from, from) && from.className != "if") ||
+                (ifConnections == 2) ||
+                (linker1.used || linker2.used))
+                    return false;
+            }
+            return true;
+        }
+
         setLinkers(el, x, y) {
             const canvas = _(this).elements.find(item => Object.is(el, item.el));
             const isParal = (el.className == "wypiszWpisz" ? 15 : 5);
@@ -182,6 +235,8 @@ const engine = (function() {
         showCables() {
             const canvas = document.getElementById("cables");
             const ctx = canvas.getContext("2d");
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             for(let cables of _(this).cables) {
                 ctx.beginPath();

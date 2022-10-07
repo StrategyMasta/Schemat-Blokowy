@@ -4,6 +4,8 @@ function dragElement(el, engine) {
 
     function dragMouseDown(e) {
         e.preventDefault();
+        if(el.className == "start" && document.getElementsByClassName("start").length == 2 && el.style.opacity != "1")
+            return;
         if(el.dataset.linked == "true") {
             el.style.opacity = 1;
             el.dataset.linked = false;
@@ -31,6 +33,52 @@ function dragElement(el, engine) {
             const posY = el.style.top.slice(0, el.style.top.length - 2) * 1;
             engine.setLinkers(el, posX, posY);
             //aktualizowanie połączeń tutaj
+
+            if(!engine.usedLinkers(el)) return;
+
+            const connections = engine.getCables(el);
+
+            for(let connection of connections) {
+
+                const {linkers, from, to} = connection;
+                const linker1 = engine.getLinker(from, linkers);
+                const linker2 = engine.getLinker(to, linkers);
+                let cables = [{x: linker1.x, y: linker1.y}];
+
+                if(linker1.up && linker2.up) {
+                    cables[1] = {x: cables[0].x, y: cables[0].y + (linker2.y - cables[0].y)/2};
+                    cables[2] = {x: linker2.x, y: cables[1].y};
+                } else if(!linker1.up && !linker2.up) {
+                    if(linker1.up2 && linker2.up2) cables[1] = {x: cables[0].x - Math.abs(linker1.x - linker2.x + 20), y: cables[0].y};
+                    else if(!linker1.up2 && !linker2.up2) cables[1] = {x: cables[0].x + Math.abs(linker1.x - linker2.x) + 20, y: cables[0].y};
+                    else cables[1] = {x: cables[0].x + (linker2.x - cables[0].x)/2, y: cables[0].y};
+                    cables[2] = {x: cables[1].x, y: linker2.y};
+                } else if(linker1.up) {
+                    cables[1] = {x: cables[0].x, y: linker2.y};
+                } else {
+                    cables[1] = {x: linker2.x, y: cables[0].y};
+                }
+        
+                cables.push({x: linker2.x, y: linker2.y});
+        
+                const arrow = [];
+        
+                if(linker2.up && linker2.up2) {
+                    arrow.push({x: linker2.x - 6, y: linker2.y - 6});
+                    arrow.push({x: linker2.x + 6, y: linker2.y - 6});
+                } else if(!linker2.up && !linker2.up2) {
+                    arrow.push({x: linker2.x + 6, y: linker2.y - 6});
+                    arrow.push({x: linker2.x + 6, y: linker2.y + 6});
+                } else if(linker2.up && !linker2.up2) {
+                    arrow.push({x: linker2.x - 6, y: linker2.y + 6});
+                    arrow.push({x: linker2.x + 6, y: linker2.y + 6});
+                } else {
+                    arrow.push({x: linker2.x - 6, y: linker2.y - 6});
+                    arrow.push({x: linker2.x - 6, y: linker2.y + 6});
+                }
+
+                engine.updateCable(from, to, cables, arrow);
+            }
         }
 
         if(el.id == "bloki") {
@@ -61,7 +109,6 @@ function dragElement(el, engine) {
 }
 
 function mouseOver(canvas, engine) {
-    const num = canvas.className == "wypiszWpisz" ? 15 : 5;
     canvas.addEventListener("mouseover", function() {
         engine.linker(canvas);
     });
@@ -124,8 +171,14 @@ function preview(canvas, engine) {
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        //connection validation
+
         if(!linker1) return;
-        if(!linker2) {
+        if(!linker2 || Object.is(el1, el2)) {
+            cables = [];
+            return;
+        }
+        if(!engine.validateCable(el1, linker1, linker2)) {
             cables = [];
             return;
         }
@@ -162,7 +215,8 @@ function preview(canvas, engine) {
             arrow.push({x: linker2.x - 6, y: linker2.y + 6});
         }
 
-        engine.addCable(cables, el1, el2, arrow);
+        engine.addCable(cables, el1, el2, arrow, [linker1, linker2]);
+        engine.setUsed(linker1, linker2);
         cables = [];
     }
 }
