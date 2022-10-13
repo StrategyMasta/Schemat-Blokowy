@@ -55,16 +55,19 @@ body {
     transform: translate(-50%, -50%);
     border: 2px solid black;
     padding: 7px;
-    font-size: 30px;
-    font-family: "Oxanium";
     background-color: white;
     display: none;
+    z-index: 3;
 }
 
 #text {
     width: 100%;
     height: 80%;
+    font-size: 1.8em;
+    font-family: 'Oxanium';
     border: 1px solid black;
+    padding: 5px;
+    resize: none;
 }
 
 #input div {
@@ -78,6 +81,7 @@ body {
     height: 80%;
     border: 1px solid black;
     background-color: #dddddd;
+    font-size: 1.5em;
     cursor: pointer;
 }
 

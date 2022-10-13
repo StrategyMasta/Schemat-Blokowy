@@ -117,7 +117,7 @@ function doubleClick(el, engine) {
         const input = document.getElementById("input");
 
         input.style.display = "inline";
-        input.focus();
+        input.children[0].focus();
     }
 }
 
