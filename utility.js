@@ -6,6 +6,8 @@ function dragElement(el, engine) {
         e.preventDefault();
         if(el.className == "start" && document.getElementsByClassName("start").length == 2 && el.style.opacity != "1")
             return;
+        if(e.target == document.getElementById("cursor") || e.target == document.getElementById("cable") || e.target == document.getElementById("eraser"))
+            return;
         if(el.dataset.linked == "true") {
             el.style.opacity = 1;
             el.dataset.linked = false;
@@ -105,6 +107,17 @@ function dragElement(el, engine) {
 
         document.onmouseup = null;
         document.onmousemove = null;
+    }
+}
+
+function doubleClick(el, engine) {
+    el.addEventListener("dblclick", dblClick);
+
+    function dblClick(e) {
+        const input = document.getElementById("input");
+
+        input.style.display = "inline";
+        input.focus();
     }
 }
 
@@ -234,6 +247,7 @@ function createBlock(type, engine) {
     engine.add(el);
     engine[type](el);
     dragElement(el, engine);
+    doubleClick(el, engine);
     mouseOver(el, engine);
     mouseOut(el, engine);
     document.body.appendChild(el);

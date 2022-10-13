@@ -5,6 +5,11 @@
     user-select: none;
 }
 
+@font-face {
+    font-family: Oxanium;
+    src: url(fonts/Oxanium-VariableFont_wght.ttf);
+}
+
 body {
     overflow: hidden;
 }
@@ -30,7 +35,7 @@ body {
     height: 100px;
 }
 
-#cable {
+#cursor {
     border: 1px solid black;
 }
 
@@ -39,6 +44,45 @@ body {
     left: calc(100% - 303px);
     width: 300px;
     height: 400px;
+}
+
+#input {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50vw;
+    height: 50vh;
+    transform: translate(-50%, -50%);
+    border: 2px solid black;
+    padding: 7px;
+    font-size: 30px;
+    font-family: "Oxanium";
+    background-color: white;
+    display: none;
+}
+
+#text {
+    width: 100%;
+    height: 80%;
+    border: 1px solid black;
+}
+
+#input div {
+    height: 15%;
+    gap: 10%;
+    flex-direction: row;
+}
+
+#potwierdz, #anuluj{
+    width: 40%;
+    height: 80%;
+    border: 1px solid black;
+    background-color: #dddddd;
+    cursor: pointer;
+}
+
+#potwierdz:hover, #anuluj:hover {
+    background-color: #cccccc;
 }
 
 h2 {

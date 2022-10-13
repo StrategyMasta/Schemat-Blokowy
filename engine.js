@@ -194,6 +194,9 @@ const engine = (function() {
 
         validateCable(from, linker1, linker2) {
             let ifConnections = 0;
+            
+            if(from.className == "stop") return false;
+
             for(let cable of _(this).cables) {
                 if(Object.is(cable.from, from) && from.className == "if")
                     ifConnections++;
@@ -264,6 +267,35 @@ const engine = (function() {
             ctx.lineTo(canvas.width - 26, canvas.height/2 + 6);
 
             this.draw(ctx, false);
+        }
+
+        cursor(canvas) {
+            const ctx = canvas.getContext("2d");
+
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2 - 10, canvas.height/2 - 17);
+            ctx.lineTo(canvas.width/2 + 10, canvas.height/2 + 4);
+            ctx.lineTo(canvas.width/2 + 2, canvas.height/2 + 5);
+            ctx.lineTo(canvas.width/2 + 8, canvas.height/2 + 16);
+            ctx.lineTo(canvas.width/2 + 2, canvas.height/2 + 17);
+            ctx.lineTo(canvas.width/2 - 3, canvas.height/2 + 7);
+            ctx.lineTo(canvas.width/2 - 10, canvas.height/2 + 12);
+            ctx.lineTo(canvas.width/2 - 10, canvas.height/2 - 17);
+
+            this.draw(ctx, false);
+        }
+
+        eraser(canvas) {
+            const ctx = canvas.getContext("2d");
+
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2 - 17, canvas.height/2 - 17);
+            ctx.lineTo(canvas.width/2 + 17, canvas.height/2 + 17);
+            this.draw(ctx);
+
+            ctx.moveTo(canvas.width/2 + 17, canvas.height/2 - 17);
+            ctx.lineTo(canvas.width/2 - 17, canvas.height/2 + 17);
+            this.draw(ctx);
         }
 
         start(canvas) {
