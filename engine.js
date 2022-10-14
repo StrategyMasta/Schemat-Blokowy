@@ -40,6 +40,23 @@ const engine = (function() {
             });
         }
 
+        removeCables(el) {
+            let cables = [];
+
+            for(let cable of _(this).cables) {
+                if(Object.is(cable.from, el)) {
+                    _(this).elements.find(item => Object.is(item.el, cable.to)).linkers.find(item => Object.is(item, cable.linkers[1])).used = false;
+                    cables.push(cable);
+                } else if(Object.is(cable.to, el)) {
+                    _(this).elements.find(item => Object.is(item.el, cable.from)).linkers.find(item => Object.is(item, cable.linkers[0])).used = false;
+                    cables.push(cable);
+                }
+            }
+            
+            for(let cable of cables)
+                _(this).cables.splice(_(this).cables.indexOf(cable), 1);
+        }
+
         set size(s) {
             _(this).size = s;
         }

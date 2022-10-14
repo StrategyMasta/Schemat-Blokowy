@@ -103,7 +103,7 @@ function dragElement(el, engine) {
             el.tagName == "CANVAS" && 
             Math.sqrt((elPos.x + elPos.width/2 - (trash.x + trash.width/2)) ** 2 + 
             (elPos.y + elPos.height/2 - (trash.y + trash.height/2)) ** 2) <= 80
-        ) deleteBlock(el);
+        ) deleteBlock(el, engine);
 
         document.onmouseup = null;
         document.onmousemove = null;
@@ -253,6 +253,7 @@ function createBlock(type, engine) {
     document.body.appendChild(el);
 }
 
-function deleteBlock(el) {
+function deleteBlock(el, engine) {
+    engine.removeCables(el);
     document.body.removeChild(el);
 }
