@@ -255,5 +255,6 @@ function createBlock(type, engine) {
 
 function deleteBlock(el, engine) {
     engine.removeCables(el);
+    engine.removeElement(el);
     document.body.removeChild(el);
 }

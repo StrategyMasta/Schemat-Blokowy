@@ -57,6 +57,10 @@ const engine = (function() {
                 _(this).cables.splice(_(this).cables.indexOf(cable), 1);
         }
 
+        removeElement(el) {
+            _(this).elements.splice(_(this).elements.indexOf(_(this).elements.find(item => Object.is(item.el, el))), 1);
+        }
+
         set size(s) {
             _(this).size = s;
         }
