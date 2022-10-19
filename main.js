@@ -27,6 +27,8 @@
     dragElement(trash, Engine);
 
     preview(previewC, Engine);
+    erase(cables, Engine);
+
     Engine.arrow(cable);
     Engine.cursor(cursor);
     Engine.eraser(eraser);
@@ -39,6 +41,7 @@
 
     cursor.addEventListener("click", function() {
         previewC.style.pointerEvents = "none";
+        cables.style.pointerEvents = "none";
         for(let i of [cursor, cable, eraser]) i.style.border = "none";
         cursor.style.border = "1px solid black";
         Engine.removeAllLinkers();
@@ -46,13 +49,15 @@
 
     cable.addEventListener("click", function() {
         previewC.style.pointerEvents = "all";
+        cables.style.pointerEvents = "none";
         for(let i of [cursor, cable, eraser]) i.style.border = "none";
         cable.style.border = "1px solid black";
         Engine.showAllLinkers();
     });
 
     eraser.addEventListener("click", function() {
-        previewC.style.pointerEvents = "all";
+        previewC.style.pointerEvents = "none";
+        cables.style.pointerEvents = "all";
         for(let i of [cursor, cable, eraser]) i.style.border = "none";
         eraser.style.border = "1px solid black";
         Engine.removeAllLinkers();

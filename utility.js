@@ -234,6 +234,10 @@ function preview(canvas, engine) {
     }
 }
 
+function erase(canvas, engine) {
+    canvas.addEventListener("click", e => engine.getCableByDist(e.clientX, e.clientY));
+}
+
 function createBlock(type, engine) {
     const el = document.createElement("CANVAS");
     el.style.position = "absolute";

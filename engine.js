@@ -70,6 +70,23 @@ const engine = (function() {
             canvas.height = 80 * _(this).size;
         }
 
+        calcLineFunc(p1, p2) {
+            if(p1.x != p2.x) {
+                const a = (p2.y - p1.y) / (p2.x - p1.x);
+                const b = p1.y - a * p1.x;
+                return [a, b];
+            }
+
+            const a = 444;
+            const b = p1.y - p1.x * a;
+            return [a, b];
+        }
+
+        calcDistFromPointToLine(A, C, p) {
+            const B = -1;
+            return Math.abs(A * p.x + B * p.y + C) / Math.sqrt(A ** 2 + B ** 2);
+        }
+
         draw(ctx, fill = true) {
             ctx.lineWidth = 2;
             ctx.strokeStyle = "#000";
@@ -202,6 +219,27 @@ const engine = (function() {
                     cables.push(cable);
 
             return cables;
+        }
+
+        getCableByDist(x, y) {
+            let last;
+            for(let cableSet of _(this).cables)
+                for(let cable of cableSet.cable) {
+                    if(cableSet.cable.indexOf(cable) == 0) {
+                        last = cable;
+                        continue;
+                    }
+
+                    const [a, b] = this.calcLineFunc(last, cable);
+
+                    if((((last.x < x && cable.x > x) || (last.x > x && cable.x < x)) && last.y == cable.y) ||
+                    (((last.y < y && cable.y > y) || (last.y > y && cable.y < y))) && last.x == cable.x)
+                        if(this.calcDistFromPointToLine(a, b, {x, y}) <= 10) {
+                            _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
+                            return;
+                        }
+                    last = cable;
+                }
         }
 
         updateCable(from, to, newCable, arrow) {
