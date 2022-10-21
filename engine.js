@@ -70,6 +70,29 @@ const engine = (function() {
             canvas.height = 80 * _(this).size;
         }
 
+        getText(el) {
+            return _(this).elements.find(elem => Object.is(elem.el, el)).text;
+        }
+
+        setText(el, text) {
+            _(this).elements.find(elem => Object.is(elem.el, el)).text = text;
+
+            text = text.split("\n");
+
+            const ctx = el.getContext("2d");
+            el.width = text.reduce((sum, line) => Math.max(sum, ctx.measureText(line).width), 0) + (el.className == "wypiszWpisz" ? 60 : (el.className == "if" ? 46 : 30));
+            el.height = text.length * (el.className == "if" ? 36 : 20) + 30;
+
+            text = text.join("\n");
+
+            ctx.clearRect(0, 0, el.width, el.height);
+            this[el.className](el, text);
+
+            const posX = el.style.left.slice(0, el.style.left.length - 2) * 1;
+            const posY = el.style.top.slice(0, el.style.top.length - 2) * 1;
+            this.setLinkers(el, posX, posY);
+        }
+
         calcLineFunc(p1, p2) {
             if(p1.x != p2.x) {
                 const a = (p2.y - p1.y) / (p2.x - p1.x);
@@ -97,12 +120,19 @@ const engine = (function() {
 
         write(text, canvas, size = 30) {
             const ctx = canvas.getContext("2d");
+            const lines = text.split('\n');
         
             ctx.fillStyle = "#000";
             ctx.font = `${size}px Arial`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+            for(var i = 1; i <= lines.length; i++) {
+                if(lines[i - 1] == "{" || lines[i - 1] == "}") ctx.textAlign = "start";
+
+                ctx.fillText(lines[i - 1], ctx.textAlign == "center" ? canvas.width / 2 : (canvas.className == "wypiszWpisz" ? 30 : 15), canvas.height / (1 + lines.length) * i);
+                ctx.textAlign = "center";
+            }
         }
 
         ellipse(canvas) {
@@ -235,6 +265,8 @@ const engine = (function() {
                     if((((last.x < x && cable.x > x) || (last.x > x && cable.x < x)) && last.y == cable.y) ||
                     (((last.y < y && cable.y > y) || (last.y > y && cable.y < y))) && last.x == cable.x)
                         if(this.calcDistFromPointToLine(a, b, {x, y}) <= 10) {
+                            _(this).elements.find(item => Object.is(item.el, cableSet.from)).linkers.find(item => Object.is(item, cableSet.linkers[0])).used = false;
+                            _(this).elements.find(item => Object.is(item.el, cableSet.to)).linkers.find(item => Object.is(item, cableSet.linkers[1])).used = false;
                             _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
                             return;
                         }
@@ -369,22 +401,22 @@ const engine = (function() {
             this.write("Stop", canvas);
         }
 
-        poleObliczeniowe(canvas) {
-            this.setSize(canvas);
+        poleObliczeniowe(canvas, text = null) {
+            if(text == null) this.setSize(canvas);
             this.rect(canvas);
-            this.write("Pole Obliczeniowe", canvas, 15);
+            this.write(text != null ? text : "Pole Obliczeniowe", canvas, 15);
         }
 
-        wypiszWpisz(canvas) {
-            this.setSize(canvas);
+        wypiszWpisz(canvas, text = null) {
+            if(text == null) this.setSize(canvas);
             this.parallelogram(canvas);
-            this.write("Wypisz/Wpisz", canvas, 15);
+            this.write(text != null ? text : "Wypisz/Wpisz", canvas, 15);
         }
 
-        if(canvas) {
-            this.setSize(canvas);
+        if(canvas, text = null) {
+            if(text == null) this.setSize(canvas);
             this.rhombus(canvas);
-            this.write("If", canvas);
+            this.write(text != null ? text : "If", canvas, text != null ? 20 : 30);
         }
     }
 

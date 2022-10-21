@@ -129,7 +129,7 @@ canvas:active {
     width: 100px;
     height: 150px;
     cursor: grab;
-    z-index: 5;
+    z-index: -1;
 }
 
 #trash:active {

@@ -6,7 +6,11 @@ function dragElement(el, engine) {
         e.preventDefault();
         if(el.className == "start" && document.getElementsByClassName("start").length == 2 && el.style.opacity != "1")
             return;
+        if(el.className == "stop" && document.getElementsByClassName("stop").length == 2 && el.style.opacity != "1")
+            return;
         if(e.target == document.getElementById("cursor") || e.target == document.getElementById("cable") || e.target == document.getElementById("eraser"))
+            return;
+        if(document.getElementById("cursor").style.border == "none")
             return;
         if(el.dataset.linked == "true") {
             el.style.opacity = 1;
@@ -111,15 +115,33 @@ function dragElement(el, engine) {
 }
 
 function doubleClick(el, engine) {
-    el.addEventListener("dblclick", dblClick);
+    if(el.className != "start" && el.className != "stop") 
+        el.addEventListener("dblclick", dblClick);
 
-    function dblClick(e) {
+    function dblClick() {
         const input = document.getElementById("input");
-
+        const text = document.getElementById("text");
+        const apply = document.getElementById("potwierdz");
+        const cancel = document.getElementById("anuluj");
+    
+        text.value = engine.getText(el);
         input.style.display = "inline";
         input.children[0].focus();
+
+        apply.onclick = function() {
+            engine.setText(el, text.value);
+            input.style.display = "none";
+        }
+
+        cancel.onclick = function() {
+            input.style.display = "none";
+        }
     }
 }
+
+//function spellCheck(e) {
+    //console.log("Changed!");
+//}
 
 function mouseOver(canvas, engine) {
     canvas.addEventListener("mouseover", function() {

@@ -9,6 +9,7 @@
     const cursor = document.getElementById("cursor");
     const cable = document.getElementById("cable");
     const eraser = document.getElementById("eraser");
+    //const text = document.getElementById("text");
 
     cursor.width = 100;
     cursor.height = 40;
@@ -38,6 +39,9 @@
         requestAnimationFrame(animate);
     }
     animate();
+
+    //text.addEventListener("keypress", spellCheck);
+    //text.addEventListener("keydown", e => e.key == "Backspace" ? spellCheck(e) : 0);
 
     cursor.addEventListener("click", function() {
         previewC.style.pointerEvents = "none";
