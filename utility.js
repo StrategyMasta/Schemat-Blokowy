@@ -208,7 +208,7 @@ function preview(canvas, engine) {
     }
 
     function mouseUp(e) {
-        const linker2 = engine.findLinker(e.clientX, e.clientY);
+        let linker2 = engine.findLinker(e.clientX, e.clientY);
         const el2 = engine.findElement(e.clientX, e.clientY);
 
         const ctx = canvas.getContext("2d");
@@ -227,7 +227,7 @@ function preview(canvas, engine) {
         }
 
         let arrow;
-        [cables, arrow] = engine.createCable(linker1, linker2, cables);
+        [cables, arrow, linker1, linker2] = engine.createCable(linker1, linker2, el1, el2, cables);
 
         engine.addCable(cables, el1, el2, arrow, [linker1, linker2]);
         engine.setUsed(linker1, linker2);

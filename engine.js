@@ -239,11 +239,11 @@ const engine = (function() {
             return undefined;
         }
 
-        setUsed(linker1, linker2) {
+        setUsed(linker1, linker2, value = true) {
             for(let item of _(this).elements)
                 for(let i = 0; i < 4; i++)
                     if(Object.is(item.linkers[i], linker1) || Object.is(item.linkers[i], linker2))
-                        item.linkers[i].used = true;
+                        item.linkers[i].used = value;
         }
 
         usedLinkers(el) {
@@ -260,18 +260,95 @@ const engine = (function() {
                             return linker;
         }
 
-        createCable(linker1, linker2, cables) {
+        createCable(linker1, linker2, from, to, cables) {
+            const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
+            const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
+
+            //lewy górny róg
+            if(left1.x >= right2.x && top1.y >= bottom2.y) {
+                if(linker1 == right1 || linker1 == bottom1) {
+                    if(!left1.used) linker1 = left1;
+                    else if(!top1.used) linker1 = top1;
+                }
+                if(linker2 == top2 || linker2 == left2) {
+                    if(!right2.used) linker2 = right2;
+                    else if(!bottom2.used) linker2 = bottom2;
+                }
+            }
+            //prawy górny róg
+            else if(right1.x <= left2.x && top1.y >= bottom2.y) {
+                if(linker1 == left1 || linker1 == bottom1) {
+                    if(!right1.used) linker1 = right1;
+                    else if(!top1.used) linker1 = top1;
+                }
+                if(linker2 == top2 || linker2 == right2) {
+                    if(!left2.used) linker2 = left2;
+                    else if(!bottom2.used) linker2 = bottom2;
+                }
+            }
+            //prawy dolny róg
+            else if(right1.x <= left2.x && bottom1.y <= top2.y) {
+                if(linker1 == left1 || linker1 == top1) {
+                    if(!right1.used) linker1 = right1;
+                    else if(!bottom1.used) linker1 = bottom1;
+                }
+                if(linker2 == bottom2 || linker2 == right2) {
+                    if(!left2.used) linker2 = left2;
+                    else if(!top2.used) linker2 = top2;
+                }
+            }
+            //lewy dolny róg
+            else if(left1.x >= right2.x && bottom1.y <= top2.y) {
+                if(linker1 == right1 || linker1 == top1) {
+                    if(!left1.used) linker1 = left1;
+                    else if(!bottom1.used) linker1 = bottom1;
+                }
+                if(linker2 == bottom2 || linker2 == left2) {
+                    if(!right2.used) linker2 = right2;
+                    else if(!top2.used) linker2 = top2;
+                }
+            }
+            //góra
+            else if(top1.y >= bottom2.y) {
+                if(linker1 != top1 && !top1.used) linker1 = top1;
+                if(linker2 != bottom2 && !bottom2.used) linker2 = bottom2;
+            }
+            //prawo
+            else if(right1.x <= left2.x) {
+                if(linker1 != right1 && !right1.used) linker1 = right1;
+                if(linker2 != left2 && !left2.used) linker2 = left2;
+            }
+            //dół
+            else if(bottom1.y <= top2.y) {
+                if(linker1 != bottom1 && !bottom1.used) linker1 = bottom1;
+                if(linker2 != top2 && !top2.used) linker2 = top2;
+            }
+            //lewo
+            else if(left1.x >= right2.x) {
+                if(linker1 != left1 && !left1.used) linker1 = left1;
+                if(linker2 != right2 && !right2.used) linker2 = right2;
+            }
+
+            cables[0] = {x: linker1.x, y: linker1.y};
+
             if(linker1.up && linker2.up) {
+                //góra/dół do góra/dół
                 cables[1] = {x: cables[0].x, y: cables[0].y + (linker2.y - cables[0].y)/2};
                 cables[2] = {x: linker2.x, y: cables[1].y};
             } else if(!linker1.up && !linker2.up) {
+                //lewo/prawo do lewo/prawo
+                //lewo do lewo
+                //prawo do prawo
+                //lewo do prawo lub prawo do lewo
                 if(linker1.up2 && linker2.up2) cables[1] = {x: cables[0].x - Math.abs(linker1.x - linker2.x + 20), y: cables[0].y};
                 else if(!linker1.up2 && !linker2.up2) cables[1] = {x: cables[0].x + Math.abs(linker1.x - linker2.x) + 20, y: cables[0].y};
                 else cables[1] = {x: cables[0].x + (linker2.x - cables[0].x)/2, y: cables[0].y};
                 cables[2] = {x: cables[1].x, y: linker2.y};
             } else if(linker1.up) {
+                //góra/dół do lewo/prawo
                 cables[1] = {x: cables[0].x, y: linker2.y};
             } else {
+                //lewo/prawo do góra/dół
                 cables[1] = {x: linker2.x, y: cables[0].y};
             }
     
@@ -293,7 +370,7 @@ const engine = (function() {
                 arrow.push({x: linker2.x - 6, y: linker2.y + 6});
             }
 
-            return [cables, arrow];
+            return [cables, arrow, linker1, linker2];
         }
 
         getCables(el) {
@@ -336,21 +413,28 @@ const engine = (function() {
             for(let connection of connections) {
 
                 const {linkers, from, to} = connection;
-                const linker1 = this.getLinker(from, linkers);
-                const linker2 = this.getLinker(to, linkers);
+                let linker1 = this.getLinker(from, linkers);
+                let linker2 = this.getLinker(to, linkers);
                 let cables = [{x: linker1.x, y: linker1.y}];
+                let copy = [linker1, linker2];
 
                 let arrow;
-                [cables, arrow] = this.createCable(linker1, linker2, cables);
+                [cables, arrow, linker1, linker2] = this.createCable(linker1, linker2, from, to, cables);
 
-                this.updateCable(from, to, cables, arrow);
+                if(copy[0] != linker1 || copy[1] != linker2) {
+                    this.setUsed(copy[0], copy[1], false);
+                    this.setUsed(linker1, linker2, true);
+                }
+
+                this.updateCable(from, to, cables, arrow, linker1, linker2);
             }
         }
 
-        updateCable(from, to, newCable, arrow) {
+        updateCable(from, to, newCable, arrow, linker1, linker2) {
             for(let cable of _(this).cables)
                 if(Object.is(cable.from, from) && Object.is(cable.to, to)) {
                     cable.cable = newCable;
+                    cable.linkers = [linker1, linker2];
                     cable.arrow = arrow;
                     return;
                 }
