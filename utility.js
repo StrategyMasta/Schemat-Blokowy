@@ -81,16 +81,68 @@ function doubleClick(el, engine) {
         const cancel = document.getElementById("anuluj");
     
         text.value = engine.getText(el);
+        if(el.className == "if") {
+            let ifValue = engine.getIfValue(el);
+
+            text.insertAdjacentHTML("afterend", 
+                `<div class="wrapper" id="bool">
+                    <label>TRUE <select name="true">
+                        <option value="Góra">Góra</option>
+                        <option value="Prawo">Prawo</option>
+                        <option value="Lewo">Lewo</option>
+                        <option value="Dół">Dół</option>
+                    </select></label>
+
+                    <label>FALSE <select name="false">
+                    <option value="Góra">Góra</option>
+                    <option value="Prawo">Prawo</option>
+                    <option value="Lewo">Lewo</option>
+                    <option value="Dół">Dół</option>
+                </select></label>
+                </div>`);
+
+            document.getElementsByName("true")[0].value = ifValue?.true || "Góra";
+            document.getElementsByName("false")[0].value = ifValue?.false || "Góra";
+            text.style.height = "70%";
+        } else if(el.className == "wypiszWpisz") {
+            let wypisz = engine.getWypisz(el) ?? true;
+
+            text.insertAdjacentHTML("afterend", 
+                `<div class="wrapper" id="bool">
+                    <label>WYPISZ <input type="radio" name="bool2" ` + (wypisz ? "checked" : "") + ` /></label>
+                    <label>WPISZ <input type="radio" name="bool2" ` + (!wypisz ? "checked" : "") + ` /></label>
+                </div>`);
+            text.style.height = "70%";
+        }
+
         input.style.display = "inline";
         input.children[0].focus();
 
         apply.onclick = function() {
-            engine.setText(el, text.value);
+            let ifValue = null;
+            let wypisz = null;
+
+            if(el.className == "if") {
+                ifValue = {
+                    true: document.getElementsByName("true")[0].value,
+                    false: document.getElementsByName("false")[0].value
+                };
+            } else if(el.className == "wypiszWpisz") {
+                wypisz = document.getElementsByName("bool2")[0].checked;
+            }
+
+            engine.setText(el, text.value, {ifValue, wypisz});
             input.style.display = "none";
+            text.style.height = "80%";
+            if(el.className == "if" || el.className == "wypiszWpisz")
+                document.getElementById("bool").remove();
         }
 
         cancel.onclick = function() {
             input.style.display = "none";
+            text.style.height = "80%";
+            if(el.className == "if" || el.className == "wypiszWpisz")
+                document.getElementById("bool").remove();
         }
     }
 }
@@ -169,7 +221,7 @@ function preview(canvas, engine) {
             cables = [];
             return;
         }
-        if(!engine.validateCable(el1, linker1, linker2)) {
+        if(!engine.validateCable(el1, el2, linker1, linker2)) {
             cables = [];
             return;
         }

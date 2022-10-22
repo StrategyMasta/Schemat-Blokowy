@@ -76,6 +76,10 @@ body {
     flex-direction: row;
 }
 
+select {
+    border: 1px solid black;
+}
+
 #potwierdz, #anuluj{
     width: 40%;
     height: 80%;

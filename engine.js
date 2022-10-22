@@ -21,6 +21,8 @@ const engine = (function() {
             _(this).elements.push({
                 el,
                 text: "",
+                ifValue: {true: "Prawo", false: "Lewo"},
+                wypisz: true,
                 linkers: [
                     {used: false, up: true, up2: true, x: posX + el.width/2, y: posY + 5},
                     {used: false, up: false, up2: false, x: posX + el.width - isParal, y: posY + el.height/2},
@@ -74,8 +76,15 @@ const engine = (function() {
             return _(this).elements.find(elem => Object.is(elem.el, el)).text;
         }
 
-        setText(el, text) {
-            _(this).elements.find(elem => Object.is(elem.el, el)).text = text;
+        setText(el, text, options) {
+            const originalEl = _(this).elements.find(elem => Object.is(elem.el, el));
+
+            originalEl.text = text;
+
+            if(options.ifValue)
+                originalEl.ifValue = options.ifValue;
+            else if(options.wypisz != null)
+                originalEl.wypisz = options.wypisz;
 
             text = text.split("\n");
 
@@ -92,6 +101,14 @@ const engine = (function() {
             const posY = el.style.top.slice(0, el.style.top.length - 2) * 1;
             this.setLinkers(el, posX, posY);
             this.updateCables(el);
+        }
+
+        getIfValue(el) {
+            return _(this).elements.find(elem => Object.is(elem.el, el)).ifValue;
+        }
+
+        getWypisz(el) {
+            return _(this).elements.find(elem => Object.is(elem.el, el)).wypisz;
         }
 
         calcLineFunc(p1, p2) {
@@ -339,10 +356,11 @@ const engine = (function() {
                 }
         }
 
-        validateCable(from, linker1, linker2) {
+        validateCable(from, to, linker1, linker2) {
             let ifConnections = 0;
             
             if(from.className == "stop") return false;
+            if(to.className == "start") return false;
 
             for(let cable of _(this).cables) {
                 if(Object.is(cable.from, from) && from.className == "if")
@@ -400,6 +418,28 @@ const engine = (function() {
                 ctx.lineTo(cables.arrow[1].x, cables.arrow[1].y);
                 
                 this.draw(ctx, false);
+            }
+
+            for(let elem of _(this).elements) {
+                if(elem.el.className == "if" && elem.el.dataset.linked == "false") {
+                    for(let value of ["TRUE", "FALSE"]) {
+                        ctx.font = "13px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "blue";
+
+                        if(elem.ifValue[value.toLowerCase()] == "Góra") ctx.fillText(value, elem.linkers[0].x - 24, elem.linkers[0].y - 12);
+                        if(elem.ifValue[value.toLowerCase()] == "Prawo") ctx.fillText(value, elem.linkers[1].x + 16, elem.linkers[1].y - 12);
+                        if(elem.ifValue[value.toLowerCase()] == "Lewo") ctx.fillText(value, elem.linkers[3].x - 16, elem.linkers[3].y - 12);
+                        if(elem.ifValue[value.toLowerCase()] == "Dół") ctx.fillText(value, elem.linkers[2].x - 24, elem.linkers[2].y + 12);
+                    }
+                } else if(elem.el.className == "wypiszWpisz" && elem.el.dataset.linked == "false") {
+                    ctx.font = "12px Arial";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "blue";
+                    ctx.fillText((elem.wypisz ? "WYPISZ" : "WPISZ"), elem.linkers[0].x - 30, elem.linkers[0].y - 12);
+                }
             }
         }
 
