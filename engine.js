@@ -7,7 +7,8 @@ const engine = (function() {
             var privateMembers = {
                 elements: [],
                 size: 1,
-                cables: []
+                cables: [],
+                changed: false
             };
 
             priv.set(this, privateMembers);
@@ -38,7 +39,8 @@ const engine = (function() {
                 from: el1,
                 to: el2,
                 arrow,
-                linkers
+                linkers,
+                crosses: []
             });
         }
 
@@ -57,6 +59,9 @@ const engine = (function() {
             
             for(let cable of cables)
                 _(this).cables.splice(_(this).cables.indexOf(cable), 1);
+            
+            this.needsCheck = true;
+            setTimeout(() => this.needsCheck = false, 50);
         }
 
         removeElement(el) {
@@ -484,6 +489,55 @@ const engine = (function() {
                 this.removeLinkers(el.el);
         }
 
+        set needsCheck(bool) {
+            _(this).changed = bool;
+        }
+
+        crossCheck(last, cable, cableSet, ctx) {
+            if(_(this).changed && last.y == cable.y) {
+                const crosses = [];
+
+                for(let cableSet2 of _(this).cables) {
+                    if(Object.is(cableSet2, cableSet)) continue;
+
+                    let last2 = null;
+
+                    for(let cable2 of cableSet2.cable) {
+                        if(last2 == null) {
+                            last2 = cable2;
+                            continue;
+                        }
+
+                        if(last2.x == cable2.x &&
+                            (Math.min(last2.y, cable2.y) < cable.y && Math.max(last2.y, cable2.y) > cable.y) &&
+                            (Math.min(last.x, cable.x) < cable2.x && Math.max(last.x, cable.x) > cable2.x))
+                            {
+                                crosses.push({cable, cable2});
+                                break;
+                        }
+                        
+                        last2 = cable2;
+                    }
+                }
+
+                crosses.sort((a, b) => (cable.x - last.x > 0 ? a.cable2.x - b.cable2.x : b.cable2.x - a.cable2.x));
+                cableSet.crosses = crosses;
+            }
+            
+            for(let cross of cableSet.crosses) {
+                if(cross.cable != cable) continue;
+
+                const dist = Math.sign(cable.x - cross.cable2.x);
+
+                ctx.lineTo(cross.cable2.x - 8 * dist, cable.y);
+                ctx.bezierCurveTo(cross.cable2.x - 8 * dist, cable.y - 8,
+                                  cross.cable2.x + 8 * dist, cable.y - 8,
+                                  cross.cable2.x + 8 * dist, cable.y);
+            }
+
+            ctx.lineTo(cable.x, cable.y);
+        }
+
         showCables() {
             const canvas = document.getElementById("cables");
             const ctx = canvas.getContext("2d");
@@ -494,8 +548,9 @@ const engine = (function() {
                 ctx.beginPath();
                 ctx.moveTo(cables.cable[0].x, cables.cable[0].y);
 
-                for(let i = 1; i < cables.cable.length; i++)
-                    ctx.lineTo(cables.cable[i].x, cables.cable[i].y);
+                for(let i = 1; i < cables.cable.length; i++) {
+                    this.crossCheck(cables.cable[i - 1], cables.cable[i], cables, ctx);
+                }
                 
                 ctx.lineTo(cables.arrow[0].x, cables.arrow[0].y);
                 ctx.moveTo(cables.cable[cables.cable.length-1].x, cables.cable[cables.cable.length-1].y);

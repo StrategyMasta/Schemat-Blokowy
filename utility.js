@@ -19,6 +19,10 @@ function dragElement(el, engine) {
         }
         if(el.dataset.linked) el.style.zIndex = 2;
 
+        if(el.tagName == "CANVAS" && engine.usedLinkers(el)) {
+            engine.needsCheck = true;
+        }
+
         x = e.clientX;
         y = e.clientY;
         document.onmouseup = closeDragElement;
@@ -56,6 +60,8 @@ function dragElement(el, engine) {
   
     function closeDragElement() {
         if(el.style.zIndex == 2) el.style.zIndex = -1;
+        if(el.tagName == "CANVAS" && engine.usedLinkers(el))
+            engine.needsCheck = true;
 
         const elPos = el.getBoundingClientRect();
         const trash = document.getElementById("trash").getBoundingClientRect();
