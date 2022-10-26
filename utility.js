@@ -107,8 +107,24 @@ function doubleClick(el, engine) {
                 </select></label>
                 </div>`);
 
-            document.getElementsByName("true")[0].value = ifValue?.true || "Góra";
-            document.getElementsByName("false")[0].value = ifValue?.false || "Góra";
+            const opt1 = document.getElementsByName("true")[0];
+            const opt2 = document.getElementsByName("false")[0];
+
+            opt1.value = ifValue.true;
+            opt2.value = ifValue.false;
+
+            [...opt1.children].find(item => item.value == opt2.value).disabled = true;
+            [...opt2.children].find(item => item.value == opt1.value).disabled = true;
+
+            opt1.onchange = function() {
+                for(let item of opt2.children) item.disabled = false;
+                [...opt2.children].find(item => item.value == opt1.value).disabled = true;
+            }
+            opt2.onchange = function() {
+                for(let item of opt1.children) item.disabled = false;
+                [...opt1.children].find(item => item.value == opt2.value).disabled = true;
+            }
+            
             text.style.height = "70%";
         } else if(el.className == "wypiszWpisz") {
             let wypisz = engine.getWypisz(el) ?? true;
