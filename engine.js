@@ -8,7 +8,12 @@ const engine = (function() {
                 elements: [],
                 size: 1,
                 cables: [],
-                changed: false
+                changed: false,
+                colors: {
+                    fore: "#000",
+                    back: "#fff",
+                    text: "blue"
+                }
             };
 
             priv.set(this, privateMembers);
@@ -116,6 +121,35 @@ const engine = (function() {
             return _(this).elements.find(elem => Object.is(elem.el, el)).wypisz;
         }
 
+
+        changeTheme() {
+            if(_(this).colors.fore == "#000") {
+                _(this).colors = {
+                    fore: "#fff",
+                    back: "#222",
+                    text: "yellow"
+                };
+            } else {
+                _(this).colors = {
+                    fore: "#000",
+                    back: "#fff",
+                    text: "blue"
+                };
+            }
+
+            for(let el of _(this).elements) {
+                this[el.el.className](el.el, el.text);
+            }
+
+            for(let el of document.getElementsByClassName("wrapper")[0].children) {
+                this[el.id](el);
+            }
+
+            this.cursor(document.getElementById("cursor"));
+            this.arrow(document.getElementById("cable"));
+            this.eraser(document.getElementById("eraser"));
+        }
+
         calcLineFunc(p1, p2) {
             if(p1.x != p2.x) {
                 const a = (p2.y - p1.y) / (p2.x - p1.x);
@@ -135,9 +169,9 @@ const engine = (function() {
 
         draw(ctx, fill = true) {
             ctx.lineWidth = 2;
-            ctx.strokeStyle = "#000";
+            ctx.strokeStyle = _(this).colors.fore;
             ctx.stroke();
-            ctx.fillStyle = "#fff";
+            ctx.fillStyle = _(this).colors.back;
             if(fill) ctx.fill();
         }
 
@@ -145,7 +179,7 @@ const engine = (function() {
             const ctx = canvas.getContext("2d");
             const lines = text.split('\n');
         
-            ctx.fillStyle = "#000";
+            ctx.fillStyle = _(this).colors.fore;
             ctx.font = `${size}px Arial`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -184,8 +218,8 @@ const engine = (function() {
             const ctx = canvas.getContext("2d");
 
             ctx.lineWidth = 1;
-            ctx.strokeStyle = "#000";
-            ctx.fillStyle = "#fff";
+            ctx.strokeStyle = _(this).colors.fore;
+            ctx.fillStyle = _(this).colors.back;
             ctx.fillRect(5, 5, canvas.width - 10, canvas.height - 10);
             ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
         }
@@ -565,7 +599,7 @@ const engine = (function() {
                         ctx.font = "13px Arial";
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
-                        ctx.fillStyle = "blue";
+                        ctx.fillStyle = _(this).colors.text;
 
                         if(elem.ifValue[value.toLowerCase()] == "Góra") ctx.fillText(value, elem.linkers[0].x - 24, elem.linkers[0].y - 12);
                         if(elem.ifValue[value.toLowerCase()] == "Prawo") ctx.fillText(value, elem.linkers[1].x + 16, elem.linkers[1].y - 12);
@@ -576,7 +610,7 @@ const engine = (function() {
                     ctx.font = "12px Arial";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillStyle = "blue";
+                    ctx.fillStyle = _(this).colors.text;
                     ctx.fillText((elem.wypisz ? "WYPISZ" : "WPISZ"), elem.linkers[0].x - 30, elem.linkers[0].y - 12);
                 }
             }

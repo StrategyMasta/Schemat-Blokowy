@@ -9,6 +9,7 @@
     const cursor = document.getElementById("cursor");
     const cable = document.getElementById("cable");
     const eraser = document.getElementById("eraser");
+    const theme = document.getElementById("theme");
     //const text = document.getElementById("text");
 
     cursor.width = 100;
@@ -29,6 +30,7 @@
 
     preview(previewC, Engine);
     erase(cables, Engine);
+    changeTheme(theme, Engine);
 
     Engine.arrow(cable);
     Engine.cursor(cursor);
@@ -47,7 +49,7 @@
         previewC.style.pointerEvents = "none";
         cables.style.pointerEvents = "none";
         for(let i of [cursor, cable, eraser]) i.style.border = "none";
-        cursor.style.border = "1px solid black";
+        cursor.style.border = "1px solid var(--theme-fore)";
         Engine.removeAllLinkers();
     });
 
@@ -55,7 +57,7 @@
         previewC.style.pointerEvents = "all";
         cables.style.pointerEvents = "none";
         for(let i of [cursor, cable, eraser]) i.style.border = "none";
-        cable.style.border = "1px solid black";
+        cable.style.border = "1px solid var(--theme-fore)";
         Engine.showAllLinkers();
     });
 
@@ -63,7 +65,7 @@
         previewC.style.pointerEvents = "none";
         cables.style.pointerEvents = "all";
         for(let i of [cursor, cable, eraser]) i.style.border = "none";
-        eraser.style.border = "1px solid black";
+        eraser.style.border = "1px solid var(--theme-fore)";
         Engine.removeAllLinkers();
     });
 

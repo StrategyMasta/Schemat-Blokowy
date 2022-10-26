@@ -153,6 +153,22 @@ function doubleClick(el, engine) {
     }
 }
 
+function changeTheme(el, engine) {
+    el.addEventListener("click", function() {
+        const root = document.querySelector(":root");
+        const data = getComputedStyle(root);
+        const props = ["back", "fore", "shadow", "shadow2", "buttons", "buttons-hover", "footer"];
+        const lightTheme = ["#fff", "#000", "#555", "rgba(55, 55, 55, 0.7)", "#ddd", "#ccc", "#333"];
+        const darkTheme = ["#222", "#fff", "#aaa", "rgba(55, 55, 55, 0.7)", "#222", "#333", "#ccc"];
+        const theme = data.getPropertyValue("--theme-fore").trim() == "#fff" ? lightTheme : darkTheme;
+
+        for(let i = 0; i < props.length; i++)    
+            root.style.setProperty(`--theme-${props[i]}`, theme[i]);
+        
+        engine.changeTheme();
+    });
+}
+
 //function spellCheck(e) {
     //console.log("Changed!");
 //}
