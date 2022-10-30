@@ -255,6 +255,10 @@ function preview(canvas, engine) {
         //connection validation
 
         if(!linker1) return;
+        if(engine.checkCableConnect(el1, linker1, e.clientX, e.clientY)) {
+            cables = [];
+            return;
+        }
         if(!linker2 || Object.is(el1, el2)) {
             cables = [];
             return;
@@ -274,7 +278,7 @@ function preview(canvas, engine) {
 }
 
 function erase(canvas, engine) {
-    canvas.addEventListener("click", e => engine.getCableByDist(e.clientX, e.clientY));
+    canvas.addEventListener("click", e => engine.getCableByDist(e.clientX, e.clientY, "delete"));
 }
 
 function createBlock(type, engine) {

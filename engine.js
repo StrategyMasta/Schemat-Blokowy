@@ -45,7 +45,9 @@ const engine = (function() {
                 to: el2,
                 arrow,
                 linkers,
-                crosses: []
+                crosses: [],
+                connections: [],
+                cableConnections: new WeakMap()
             });
         }
 
@@ -53,7 +55,11 @@ const engine = (function() {
             let cables = [];
 
             for(let cable of _(this).cables) {
-                if(Object.is(cable.from, el)) {
+                if(Object.is(cable.from, el) && cable.el3) {
+                    _(this).cables.find(cableSet => Object.is(cableSet, cable.el3)).cableConnections.delete(el);
+                    cables.push(cable);
+                }
+                else if(Object.is(cable.from, el)) {
                     _(this).elements.find(item => Object.is(item.el, cable.to)).linkers.find(item => Object.is(item, cable.linkers[1])).used = false;
                     cables.push(cable);
                 } else if(Object.is(cable.to, el)) {
@@ -61,6 +67,11 @@ const engine = (function() {
                     cables.push(cable);
                 }
             }
+
+            for(let cable of _(this).cables)
+                for(let thisCable of cables)
+                    if(Object.is(thisCable, cable.el3))
+                        cables.push(cable);
             
             for(let cable of cables)
                 _(this).cables.splice(_(this).cables.indexOf(cable), 1);
@@ -278,7 +289,7 @@ const engine = (function() {
             return undefined;
         }
 
-        setUsed(linker1, linker2, value = true) {
+        setUsed(linker1, linker2 = null, value = true) {
             for(let item of _(this).elements)
                 for(let i = 0; i < 4; i++)
                     if(Object.is(item.linkers[i], linker1) || Object.is(item.linkers[i], linker2))
@@ -415,13 +426,13 @@ const engine = (function() {
         getCables(el) {
             let cables = [];
             for(let cable of _(this).cables)
-                if(Object.is(cable.from, el) || Object.is(cable.to, el))
+                if(Object.is(cable.from, el) || Object.is(cable.to, el) || cables.some(thisCable => Object.is(cable.el3, thisCable)))
                     cables.push(cable);
 
             return cables;
         }
 
-        getCableByDist(x, y) {
+        getCableByDist(x, y, action) {
             let last;
             for(let cableSet of _(this).cables)
                 for(let cable of cableSet.cable) {
@@ -433,15 +444,116 @@ const engine = (function() {
                     const [a, b] = this.calcLineFunc(last, cable);
 
                     if((((last.x < x && cable.x > x) || (last.x > x && cable.x < x)) && last.y == cable.y) ||
-                    (((last.y < y && cable.y > y) || (last.y > y && cable.y < y))) && last.x == cable.x)
+                    (((last.y < y && cable.y > y) || (last.y > y && cable.y < y)) && last.x == cable.x))
                         if(this.calcDistFromPointToLine(a, b, {x, y}) <= 10) {
-                            _(this).elements.find(item => Object.is(item.el, cableSet.from)).linkers.find(item => Object.is(item, cableSet.linkers[0])).used = false;
-                            _(this).elements.find(item => Object.is(item.el, cableSet.to)).linkers.find(item => Object.is(item, cableSet.linkers[1])).used = false;
-                            _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
-                            return;
+                            if(action == "delete") {
+                                _(this).elements.find(item => Object.is(item.el, cableSet.from)).linkers.find(item => Object.is(item, cableSet.linkers[0])).used = false;
+                                _(this).elements.find(item => Object.is(item.el, cableSet.to)).linkers.find(item => Object.is(item, cableSet.linkers[1])).used = false;
+                                _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
+                                return;
+                            }
+
+                            const connDist = Math.sqrt(((x - last.x) ** 2 + (y - last.y) ** 2) - (this.calcDistFromPointToLine(a, b, {x, y}) ** 2));
+                            const cableDist = Math.sqrt((cable.x - last.x) ** 2 + (cable.y - last.y) ** 2);
+                            const cableIndex = cableSet.cable.indexOf(last);
+
+                            return [connDist / cableDist, cableSet.from, cableSet, cableIndex];
                         }
                     last = cable;
                 }
+            
+            return false;
+        }
+
+        checkCableConnect(el1, linker1, x, y) {
+            if(this.getCableByDist(x, y, "connectCable")) {
+                this.createCableConnect(el1, linker1, x, y);
+                return true;
+            }
+
+            return false;
+        }
+
+        createCableConnect(el1, linker1, x, y) {
+            const [ratio, el2, cableSet, cableIndex] = this.getCableByDist(x, y, "connectCable");
+
+            cableSet.cableConnections.set(el1, {cableIndex});
+
+            const [cables, arrow, linker2] = this.cableConnect(el1, linker1, cableSet, ratio);
+
+            this.addCable(cables, el1, el2, arrow, [linker1, linker2]);
+            this.setUsed(linker1);
+
+            _(this).cables[_(this).cables.length - 1].ratio = ratio;
+            _(this).cables[_(this).cables.length - 1].el3 = cableSet;
+        }
+
+        cableConnect(el1, linker1, cableSet, ratio) {
+            if(cableSet.cableConnections.get(el1).cableIndex == cableSet.cable.length) {
+                cableSet.cableConnection.get(el1).cableIndex--;
+                _(this).cables.find(cable => Object.is(cable, cableSet)).cableConnections.set(el1, {cableIndex: 1});
+            }
+
+            const last = cableSet.cable[cableSet.cableConnections.get(el1).cableIndex];
+            const cable = cableSet.cable[cableSet.cableConnections.get(el1).cableIndex + 1];
+            const linker2 = {x: (last.x + ratio * (cable.x - last.x)), y: (last.y + ratio * (cable.y - last.y))};
+            const [top, right, bottom, left] = _(this).elements.find(elem => Object.is(elem.el, el1)).linkers;
+            
+            linker2.up = last.y == cable.y;
+            linker2.up2 = (linker2.up && linker1.y < linker2.y) || (!linker2.up && linker1.x < linker2.x);
+
+            if(linker2.up) linker2.y += linker2.up2 ? -5 : 5;
+            else linker2.x += linker2.up2 ? -5 : 5;
+
+            if(top.y > linker2.y && !top.used) linker1 = top;
+            else if(right.x < linker2.x && !right.used) linker1 = right;
+            else if(bottom.y < linker2.y && !bottom.used) linker1 = bottom;
+            else if(left.x > linker2.x && !left.used) linker1 = left;
+
+            //cable
+            let cables = [{x: linker1.x, y: linker1.y}];
+
+            if(linker1.up && linker2.up) {
+                //góra/dół do góra/dół
+                cables[1] = {x: cables[0].x, y: cables[0].y + (linker2.y - cables[0].y)/2};
+                cables[2] = {x: linker2.x, y: cables[1].y};
+            } else if(!linker1.up && !linker2.up) {
+                //lewo/prawo do lewo/prawo
+                //lewo do lewo
+                //prawo do prawo
+                //lewo do prawo lub prawo do lewo
+                if(linker1.up2 && linker2.up2) cables[1] = {x: cables[0].x - Math.abs(linker1.x - linker2.x + 20), y: cables[0].y};
+                else if(!linker1.up2 && !linker2.up2) cables[1] = {x: cables[0].x + Math.abs(linker1.x - linker2.x) + 20, y: cables[0].y};
+                else cables[1] = {x: cables[0].x + (linker2.x - cables[0].x)/2, y: cables[0].y};
+                cables[2] = {x: cables[1].x, y: linker2.y};
+            } else if(linker1.up) {
+                //góra/dół do lewo/prawo
+                cables[1] = {x: cables[0].x, y: linker2.y};
+            } else {
+                //lewo/prawo do góra/dół
+                cables[1] = {x: linker2.x, y: cables[0].y};
+            }
+    
+            cables.push({x: linker2.x, y: linker2.y});
+
+            //arrow
+            const arrow = [];
+    
+            if(linker2.up && linker2.up2) {
+                arrow.push({x: linker2.x - 6, y: linker2.y - 6});
+                arrow.push({x: linker2.x + 6, y: linker2.y - 6});
+            } else if(!linker2.up && !linker2.up2) {
+                arrow.push({x: linker2.x + 6, y: linker2.y - 6});
+                arrow.push({x: linker2.x + 6, y: linker2.y + 6});
+            } else if(linker2.up && !linker2.up2) {
+                arrow.push({x: linker2.x - 6, y: linker2.y + 6});
+                arrow.push({x: linker2.x + 6, y: linker2.y + 6});
+            } else {
+                arrow.push({x: linker2.x - 6, y: linker2.y - 6});
+                arrow.push({x: linker2.x - 6, y: linker2.y + 6});
+            }
+
+            return [cables, arrow, linker1, linker2];
         }
 
         updateCables(el) {
@@ -449,7 +561,25 @@ const engine = (function() {
 
             const connections = this.getCables(el);
 
+            connections.sort((a, b) => (a.el3 ? -1 : 1));
+
             for(let connection of connections) {
+
+                if(connection.el3) {
+                    const {linkers, from, to, el3, ratio} = connection;
+                    const linker1 = this.getLinker(from, linkers);
+
+                    const [cables, arrow, linker1New, linker2] = this.cableConnect(from, linker1, el3, ratio);
+
+                    if(!Object.is(linker1, linker1New)) {
+                        this.setUsed(linker1, null, false);
+                        this.setUsed(linker1New, null, true);
+                    }
+
+                    this.updateCable(from, to, cables, arrow, linker1New, linker2);
+
+                    continue;
+                }
 
                 const {linkers, from, to} = connection;
                 let linker1 = this.getLinker(from, linkers);
