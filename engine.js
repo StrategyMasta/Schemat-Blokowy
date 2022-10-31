@@ -56,7 +56,7 @@ const engine = (function() {
 
             for(let cable of _(this).cables) {
                 if(Object.is(cable.from, el) && cable.el3) {
-                    _(this).cables.find(cableSet => Object.is(cableSet, cable.el3)).cableConnections.delete(el);
+                    _(this).cables.find(cableSet => Object.is(cableSet, cable.el3)).cableConnections.delete(cable.linkers[0]);
                     cables.push(cable);
                 }
                 else if(Object.is(cable.from, el)) {
@@ -68,10 +68,9 @@ const engine = (function() {
                 }
             }
 
-            for(let cable of _(this).cables)
-                for(let thisCable of cables)
-                    if(Object.is(thisCable, cable.el3))
-                        cables.push(cable);
+            for(let cable of cables)
+                this.deleteCableConnections(cable);
+                
             
             for(let cable of cables)
                 _(this).cables.splice(_(this).cables.indexOf(cable), 1);
@@ -448,7 +447,11 @@ const engine = (function() {
                         if(this.calcDistFromPointToLine(a, b, {x, y}) <= 10) {
                             if(action == "delete") {
                                 _(this).elements.find(item => Object.is(item.el, cableSet.from)).linkers.find(item => Object.is(item, cableSet.linkers[0])).used = false;
-                                _(this).elements.find(item => Object.is(item.el, cableSet.to)).linkers.find(item => Object.is(item, cableSet.linkers[1])).used = false;
+                                if(!cableSet.el3) _(this).elements.find(item => Object.is(item.el, cableSet.to)).linkers.find(item => Object.is(item, cableSet.linkers[1])).used = false;
+                                else _(this).cables.find(cableSet2 => Object.is(cableSet2, cableSet.el3)).cableConnections.delete(cableSet.linkers[0]);
+                                
+                                this.deleteCableConnections(cableSet);
+                                
                                 _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
                                 return;
                             }
@@ -465,8 +468,30 @@ const engine = (function() {
             return false;
         }
 
+        deleteCableConnections(cableSet, isFirst = true) {
+            const cables = [];
+
+            for(let cableSet2 of _(this).cables)
+                if(Object.is(cableSet2.el3, cableSet))
+                    cables.push(cableSet2);
+                
+            if(cables == 0x0 && !isFirst) {
+                _(this).elements.find(item => Object.is(item.el, cableSet.from)).linkers.find(item => Object.is(item, cableSet.linkers[0])).used = false;
+                _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
+                return;
+            }
+            
+            for(let cable of cables)
+                this.deleteCableConnections(cable, false);
+            
+            if(!isFirst) {
+                _(this).elements.find(item => Object.is(item.el, cableSet.from)).linkers.find(item => Object.is(item, cableSet.linkers[0])).used = false;
+                _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
+            }
+        }
+
         checkCableConnect(el1, linker1, x, y) {
-            if(this.getCableByDist(x, y, "connectCable")) {
+            if(this.getCableByDist(x, y, "connectCable") && this.validateCable(el1, {}, linker1, {})) {
                 this.createCableConnect(el1, linker1, x, y);
                 return true;
             }
@@ -477,25 +502,25 @@ const engine = (function() {
         createCableConnect(el1, linker1, x, y) {
             const [ratio, el2, cableSet, cableIndex] = this.getCableByDist(x, y, "connectCable");
 
-            cableSet.cableConnections.set(el1, {cableIndex});
+            cableSet.cableConnections.set(linker1, {cableIndex});
 
-            const [cables, arrow, linker2] = this.cableConnect(el1, linker1, cableSet, ratio);
+            const [cables, arrow, linker1New, linker2] = this.cableConnect(el1, linker1, cableSet, ratio);
 
-            this.addCable(cables, el1, el2, arrow, [linker1, linker2]);
-            this.setUsed(linker1);
+            this.addCable(cables, el1, el2, arrow, [linker1New, linker2]);
+            this.setUsed(linker1New);
 
             _(this).cables[_(this).cables.length - 1].ratio = ratio;
             _(this).cables[_(this).cables.length - 1].el3 = cableSet;
         }
 
         cableConnect(el1, linker1, cableSet, ratio) {
-            if(cableSet.cableConnections.get(el1).cableIndex == cableSet.cable.length) {
-                cableSet.cableConnection.get(el1).cableIndex--;
-                _(this).cables.find(cable => Object.is(cable, cableSet)).cableConnections.set(el1, {cableIndex: 1});
+            if(cableSet.cableConnections.get(linker1).cableIndex == cableSet.cable.length) {
+                cableSet.cableConnection.get(linker1).cableIndex--;
+                _(this).cables.find(cable => Object.is(cable, cableSet)).cableConnections.set(linker1, {cableIndex: 1});
             }
 
-            const last = cableSet.cable[cableSet.cableConnections.get(el1).cableIndex];
-            const cable = cableSet.cable[cableSet.cableConnections.get(el1).cableIndex + 1];
+            const last = cableSet.cable[cableSet.cableConnections.get(linker1).cableIndex];
+            const cable = cableSet.cable[cableSet.cableConnections.get(linker1).cableIndex + 1];
             const linker2 = {x: (last.x + ratio * (cable.x - last.x)), y: (last.y + ratio * (cable.y - last.y))};
             const [top, right, bottom, left] = _(this).elements.find(elem => Object.is(elem.el, el1)).linkers;
             
@@ -505,10 +530,25 @@ const engine = (function() {
             if(linker2.up) linker2.y += linker2.up2 ? -5 : 5;
             else linker2.x += linker2.up2 ? -5 : 5;
 
-            if(top.y > linker2.y && !top.used) linker1 = top;
+            const copy = linker1;
+
+            if(top.y > linker2.y && linker1 == top) {}
+            else if(right.x < linker2.x && linker1 == right) {}
+            else if(bottom.y < linker2.y && linker1 == bottom) {}
+            else if(left.x > linker2.x && linker1 == left) {}
+
+            else if(top.y > linker2.y && !top.used) linker1 = top;
             else if(right.x < linker2.x && !right.used) linker1 = right;
             else if(bottom.y < linker2.y && !bottom.used) linker1 = bottom;
             else if(left.x > linker2.x && !left.used) linker1 = left;
+
+            if(!Object.is(linker1, copy)) {
+                cableSet.cableConnections.set(linker1, cableSet.cableConnections.get(copy));
+                cableSet.cableConnections.delete(copy);
+
+                this.setUsed(copy, null, false);
+                this.setUsed(linker1, null, true);
+            }
 
             //cable
             let cables = [{x: linker1.x, y: linker1.y}];
@@ -571,12 +611,7 @@ const engine = (function() {
 
                     const [cables, arrow, linker1New, linker2] = this.cableConnect(from, linker1, el3, ratio);
 
-                    if(!Object.is(linker1, linker1New)) {
-                        this.setUsed(linker1, null, false);
-                        this.setUsed(linker1New, null, true);
-                    }
-
-                    this.updateCable(from, to, cables, arrow, linker1New, linker2);
+                    this.updateCable(cables, arrow, linker1New, linker2, connection);
 
                     continue;
                 }
@@ -595,13 +630,13 @@ const engine = (function() {
                     this.setUsed(linker1, linker2, true);
                 }
 
-                this.updateCable(from, to, cables, arrow, linker1, linker2);
+                this.updateCable(cables, arrow, linker1, linker2, connection);
             }
         }
 
-        updateCable(from, to, newCable, arrow, linker1, linker2) {
+        updateCable(newCable, arrow, linker1, linker2, cableSet) {
             for(let cable of _(this).cables)
-                if(Object.is(cable.from, from) && Object.is(cable.to, to)) {
+                if(Object.is(cable, cableSet)) {
                     cable.cable = newCable;
                     cable.linkers = [linker1, linker2];
                     cable.arrow = arrow;
