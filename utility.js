@@ -12,6 +12,9 @@ function dragElement(el, engine) {
             return;
         if(document.getElementById("cursor").style.border == "none")
             return;
+        if(e.target == document.getElementById("try") || e.target == document.getElementById("run") || e.target == document.getElementById("speed"))
+            return;
+        
         if(el.dataset.linked == "true") {
             el.style.opacity = 1;
             el.dataset.linked = false;
@@ -188,6 +191,17 @@ function changeTheme(el, engine) {
 //function spellCheck(e) {
     //console.log("Changed!");
 //}
+
+function tryCode(el, engine) {
+    const root = document.querySelector(":root");
+
+    el.addEventListener("click", click);
+
+    function click() {
+        root.style.pointerEvents = "none";
+        engine.runCode(false);
+    }
+}
 
 function mouseOver(canvas, engine) {
     canvas.addEventListener("mouseover", function() {

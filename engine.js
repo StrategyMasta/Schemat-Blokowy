@@ -8,6 +8,7 @@ const engine = (function() {
                 elements: [],
                 size: 1,
                 cables: [],
+                speed: 1,
                 changed: false,
                 colors: {
                     fore: "#000",
@@ -177,11 +178,11 @@ const engine = (function() {
             return Math.abs(A * p.x + B * p.y + C) / Math.sqrt(A ** 2 + B ** 2);
         }
 
-        draw(ctx, fill = true) {
+        draw(ctx, fill = true, color = null) {
             ctx.lineWidth = 2;
-            ctx.strokeStyle = _(this).colors.fore;
+            ctx.strokeStyle = color || _(this).colors.fore;
             ctx.stroke();
-            ctx.fillStyle = _(this).colors.back;
+            ctx.fillStyle = color || _(this).colors.back;
             if(fill) ctx.fill();
         }
 
@@ -779,6 +780,90 @@ const engine = (function() {
                     ctx.fillText((elem.wypisz ? "WYPISZ" : "WPISZ"), elem.linkers[0].x - 30, elem.linkers[0].y - 12);
                 }
             }
+        }
+
+        runCode(run) {
+            let cable = Object.assign({}, _(this).cables.find(cableSet => cableSet.from.className == "start"));
+
+            let cables2 = [];
+
+            for(let thisCable of cable.cable)
+                cables2.push({...thisCable});
+
+            cable = Object.assign(cable, {cable: cables2});
+
+            const thisData = {
+                cable,
+                cableIndex: 0
+            };
+
+            if(!run) this.animateRun(thisData);
+        }
+
+        animateRun(data) {
+            const canvas = document.getElementById("preview");
+            const ctx = canvas.getContext("2d");
+
+            if(data.cableIndex != data.cable.cable.length - 1) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                //calculate
+                const signX = Math.sign(data.cable.cable[data.cableIndex + 1].x - data.cable.cable[data.cableIndex].x);
+                const signY = Math.sign(data.cable.cable[data.cableIndex + 1].y - data.cable.cable[data.cableIndex].y);
+
+                data.cable.cable[data.cableIndex].x += signX * 1 * _(this).speed;
+                data.cable.cable[data.cableIndex].y += signY * 1 * _(this).speed;
+
+                //draw
+                ctx.beginPath();
+                ctx.arc(data.cable.cable[data.cableIndex].x, data.cable.cable[data.cableIndex].y, 10, 0, Math.PI * 2);
+                this.draw(ctx, true, "purple");
+
+                let data2 = data;
+
+                if((signX == 0 && signY == 0) || 
+                    signX != Math.sign(data.cable.cable[data.cableIndex + 1].x - data.cable.cable[data.cableIndex].x) ||
+                    signY != Math.sign(data.cable.cable[data.cableIndex + 1].y - data.cable.cable[data.cableIndex].y)
+                ) {
+                    data2 = {
+                        cable: data.cable,
+                        cableIndex: data.cableIndex + 1
+                    }
+                }
+
+                setTimeout(() => this.animateRun(data2), 1);
+                return;
+            }
+            else if(data.cable.to.className != "stop") {
+                let newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to)));
+                let cables3 = [];
+                let cableIndex = 0;
+
+                for(let thisCable of newCable.cable)
+                    cables3.push({...thisCable});
+
+                newCable = Object.assign(newCable, {cable: cables3});
+
+                if(data.cable.el3) {
+                    newCable.cable[newCable.cableConnections.get(data.cable.linkers[0]).cableIndex].x = data.cable.linkers[1].x;
+                    newCable.cable[newCable.cableConnections.get(data.cable.linkers[0]).cableIndex].y = data.cable.linkers[1].y;
+                    cableIndex = newCable.cableConnections.get(data.cable.linkers[0]).cableIndex;
+                }
+
+                //next cable
+                let newData = {
+                    cable: newCable,
+                    cableIndex
+                };
+
+                setTimeout(() => this.animateRun(newData), 1);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const root = document.querySelector(":root");
+            root.style.pointerEvents = "all";
         }
 
         arrow(canvas) {

@@ -136,6 +136,29 @@ canvas:active {
     cursor: grabbing;
 }
 
+#buttons {
+    width: 100%;
+    height: 40px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+#buttons button {
+    width: 20%;
+    height: 100%;
+    margin-left: 3px;
+    margin-right: 3px;
+    color: var(--theme-footer);
+    background-color: var(--theme-back);
+    border: 1px solid var(--theme-fore);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#buttons button:hover {
+    background-color: var(--theme-buttons-hover);
+}
+
 #cables, #preview {
     position: absolute;
     pointer-events: none;
