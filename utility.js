@@ -194,11 +194,16 @@ function changeTheme(el, engine) {
 
 function tryCode(el, engine) {
     const root = document.querySelector(":root");
+    const output = document.getElementById("output");
 
     el.addEventListener("click", click);
 
     function click() {
         root.style.pointerEvents = "none";
+        output.innerHTML = `
+            <h2>Wyjście</h2>
+            <hr />
+        `;
         engine.runCode(false);
     }
 }

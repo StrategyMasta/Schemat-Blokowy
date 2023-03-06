@@ -132,7 +132,6 @@ const engine = (function() {
             return _(this).elements.find(elem => Object.is(elem.el, el)).wypisz;
         }
 
-
         changeTheme() {
             if(_(this).colors.fore == "#000") {
                 _(this).colors = {
@@ -835,7 +834,9 @@ const engine = (function() {
                 return;
             }
             else if(data.cable.to.className != "stop") {
-                let newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to)));
+                let [result, newCable] = this.evalCode(data.cable.to);
+
+                //let newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to)));
                 let cables3 = [];
                 let cableIndex = 0;
 
@@ -845,8 +846,14 @@ const engine = (function() {
                 newCable = Object.assign(newCable, {cable: cables3});
 
                 if(data.cable.el3) {
-                    newCable.cable[newCable.cableConnections.get(data.cable.linkers[0]).cableIndex].x = data.cable.linkers[1].x;
-                    newCable.cable[newCable.cableConnections.get(data.cable.linkers[0]).cableIndex].y = data.cable.linkers[1].y;
+                    // if(linker2.up) linker2.y += linker2.up2 ? -5 : 5;
+                    // else linker2.x += linker2.up2 ? -5 : 5;
+                    const offset = {};
+                    offset.x = data.cable.up ? 0 : (data.cable.up2 ? 5 : -5);
+                    offset.y = !data.cable.up ? 0 : (data.cable.up2 ? 5 : -5);
+
+                    newCable.cable[newCable.cableConnections.get(data.cable.linkers[0]).cableIndex].x = data.cable.linkers[1].x + offset.x;
+                    newCable.cable[newCable.cableConnections.get(data.cable.linkers[0]).cableIndex].y = data.cable.linkers[1].y + offset.y;
                     cableIndex = newCable.cableConnections.get(data.cable.linkers[0]).cableIndex;
                 }
 
@@ -864,6 +871,32 @@ const engine = (function() {
 
             const root = document.querySelector(":root");
             root.style.pointerEvents = "all";
+        }
+
+        // Eksperymentalna Metoda
+        evalCode(el) {
+            const elem = _(this).elements.find(el2 => Object.is(el2.el, el));
+            let result = null;
+
+            if(elem.el.className == "poleObliczeniowe") {
+                result = eval(elem.text);
+            } else if(elem.el.className == "wypiszWpisz") {
+                if(elem.wypisz) document.getElementById("output").innerHTML += eval(elem.text);
+                else result = eval(elem.text + " = " + alert("Podaj: " + elem.text));
+            } else {
+                result = eval(elem.text);
+                let side;
+
+                //[top, right, bottom, left]
+                if(elem.ifValue[`${!!result}`] == "Góra") side = elem.linkers[0];
+                else if(elem.ifValue[`${!!result}`] == "Prawo") side = elem.linkers[1];
+                else if(elem.ifValue[`${!!result}`] == "Dół") side = elem.linkers[2];
+                else if(elem.ifValue[`${!!result}`] == "Lewo") side = elem.linkers[3];
+
+                return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el) && Object.is(side, cableSet.linkers[0])))];
+            }
+
+            return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el)))];
         }
 
         arrow(canvas) {
