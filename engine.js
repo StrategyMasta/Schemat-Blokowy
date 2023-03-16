@@ -313,69 +313,81 @@ const engine = (function() {
             const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
             const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
 
+            const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
+            const toIfValue = _(this).elements.find(elem => Object.is(elem.el, to)).ifValue;
+
+            const validateConn = (isLinker1, side) => {
+                if((isLinker1 && from.className != "if") || (!isLinker1 && to.className != "if")) return true;
+
+                if(isLinker1 && fromIfValue.false != side && fromIfValue.true != side) return false;
+                if(!isLinker1 && (toIfValue.false == side || toIfValue.true == side)) return false;
+
+                return true;
+            }
+
             //lewy górny róg
             if(left1.x >= right2.x && top1.y >= bottom2.y) {
                 if(linker1 == right1 || linker1 == bottom1) {
-                    if(!left1.used) linker1 = left1;
-                    else if(!top1.used) linker1 = top1;
+                    if(!left1.used && validateConn(true, "Lewo")) linker1 = left1;
+                    else if(!top1.used && validateConn(true, "Góra")) linker1 = top1;
                 }
                 if(linker2 == top2 || linker2 == left2) {
-                    if(!right2.used) linker2 = right2;
-                    else if(!bottom2.used) linker2 = bottom2;
+                    if(!right2.used && validateConn(false, "Prawo")) linker2 = right2;
+                    else if(!bottom2.used && validateConn(false, "Dół")) linker2 = bottom2;
                 }
             }
             //prawy górny róg
             else if(right1.x <= left2.x && top1.y >= bottom2.y) {
                 if(linker1 == left1 || linker1 == bottom1) {
-                    if(!right1.used) linker1 = right1;
-                    else if(!top1.used) linker1 = top1;
+                    if(!right1.used && validateConn(true, "Prawo")) linker1 = right1;
+                    else if(!top1.used && validateConn(true, "Góra")) linker1 = top1;
                 }
                 if(linker2 == top2 || linker2 == right2) {
-                    if(!left2.used) linker2 = left2;
-                    else if(!bottom2.used) linker2 = bottom2;
+                    if(!left2.used && validateConn(false, "Lewo")) linker2 = left2;
+                    else if(!bottom2.used && validateConn(false, "Dół")) linker2 = bottom2;
                 }
             }
             //prawy dolny róg
             else if(right1.x <= left2.x && bottom1.y <= top2.y) {
                 if(linker1 == left1 || linker1 == top1) {
-                    if(!right1.used) linker1 = right1;
-                    else if(!bottom1.used) linker1 = bottom1;
+                    if(!right1.used && validateConn(true, "Prawo")) linker1 = right1;
+                    else if(!bottom1.used && validateConn(true, "Dół")) linker1 = bottom1;
                 }
                 if(linker2 == bottom2 || linker2 == right2) {
-                    if(!left2.used) linker2 = left2;
-                    else if(!top2.used) linker2 = top2;
+                    if(!left2.used && validateConn(false, "Lewo")) linker2 = left2;
+                    else if(!top2.used && validateConn(false, "Góra")) linker2 = top2;
                 }
             }
             //lewy dolny róg
             else if(left1.x >= right2.x && bottom1.y <= top2.y) {
                 if(linker1 == right1 || linker1 == top1) {
-                    if(!left1.used) linker1 = left1;
-                    else if(!bottom1.used) linker1 = bottom1;
+                    if(!left1.used && validateConn(true, "Lewo")) linker1 = left1;
+                    else if(!bottom1.used && validateConn(true, "Dół")) linker1 = bottom1;
                 }
                 if(linker2 == bottom2 || linker2 == left2) {
-                    if(!right2.used) linker2 = right2;
-                    else if(!top2.used) linker2 = top2;
+                    if(!right2.used && validateConn(false, "Prawo")) linker2 = right2;
+                    else if(!top2.used && validateConn(false, "Góra")) linker2 = top2;
                 }
             }
             //góra
             else if(top1.y >= bottom2.y) {
-                if(linker1 != top1 && !top1.used) linker1 = top1;
-                if(linker2 != bottom2 && !bottom2.used) linker2 = bottom2;
+                if(linker1 != top1 && !top1.used && validateConn(true, "Góra")) linker1 = top1;
+                if(linker2 != bottom2 && !bottom2.used && validateConn(false, "Dół")) linker2 = bottom2;
             }
             //prawo
             else if(right1.x <= left2.x) {
-                if(linker1 != right1 && !right1.used) linker1 = right1;
-                if(linker2 != left2 && !left2.used) linker2 = left2;
+                if(linker1 != right1 && !right1.used && validateConn(true, "Prawo")) linker1 = right1;
+                if(linker2 != left2 && !left2.used && validateConn(false, "Lewo")) linker2 = left2;
             }
             //dół
             else if(bottom1.y <= top2.y) {
-                if(linker1 != bottom1 && !bottom1.used) linker1 = bottom1;
-                if(linker2 != top2 && !top2.used) linker2 = top2;
+                if(linker1 != bottom1 && !bottom1.used && validateConn(true, "Dół")) linker1 = bottom1;
+                if(linker2 != top2 && !top2.used && validateConn(false, "Góra")) linker2 = top2;
             }
             //lewo
             else if(left1.x >= right2.x) {
-                if(linker1 != left1 && !left1.used) linker1 = left1;
-                if(linker2 != right2 && !right2.used) linker2 = right2;
+                if(linker1 != left1 && !left1.used && validateConn(true, "Lewo")) linker1 = left1;
+                if(linker2 != right2 && !right2.used && validateConn(false, "Prawo")) linker2 = right2;
             }
 
             cables[0] = {x: linker1.x, y: linker1.y};
@@ -645,10 +657,29 @@ const engine = (function() {
         }
 
         validateCable(from, to, linker1, linker2) {
+            const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
+            const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
+            const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
+            const toIfValue = _(this).elements.find(elem => Object.is(elem.el, to)).ifValue;
+
             let ifConnections = 0;
             
             if(from.className == "stop") return false;
             if(to.className == "start") return false;
+
+            if(from.className == "if" &&
+            !((fromIfValue.false == "Lewo" && Object.is(linker1, left1)) || (fromIfValue.true == "Lewo" && Object.is(linker1, left1)) || 
+            (fromIfValue.false == "Prawo" && Object.is(linker1, right1)) || (fromIfValue.true == "Prawo" && Object.is(linker1, right1)) || 
+            (fromIfValue.false == "Góra" && Object.is(linker1, top1)) || (fromIfValue.true == "Góra" && Object.is(linker1, top1)) || 
+            (fromIfValue.false == "Dół" && Object.is(linker1, bottom1)) || (fromIfValue.true == "Dół" && Object.is(linker1, bottom1))))
+                return false;
+
+            if(to.className == "if" &&
+            ((toIfValue.false == "Lewo" && Object.is(linker2, left2)) || (toIfValue.true == "Lewo" && Object.is(linker2, left2)) || 
+            (toIfValue.false == "Prawo" && Object.is(linker2, right2)) || (toIfValue.true == "Prawo" && Object.is(linker2, right2)) || 
+            (toIfValue.false == "Góra" && Object.is(linker2, top2)) || (toIfValue.true == "Góra" && Object.is(linker2, top2)) || 
+            (toIfValue.false == "Dół" && Object.is(linker2, bottom2)) || (toIfValue.true == "Dół" && Object.is(linker2, bottom2))))
+                return false;
 
             for(let cable of _(this).cables) {
                 if(Object.is(cable.from, from) && from.className == "if")
