@@ -102,9 +102,10 @@ const engine = (function() {
 
             originalEl.text = text;
 
-            if(options.ifValue)
+            if(options.ifValue) {
+                this.fixIfConnections(originalEl, originalEl.ifValue, options.ifValue);
                 originalEl.ifValue = options.ifValue;
-            else if(options.wypisz != null)
+            } else if(options.wypisz != null)
                 originalEl.wypisz = options.wypisz;
 
             text = text.split("\n");
@@ -122,6 +123,24 @@ const engine = (function() {
             const posY = el.style.top.slice(0, el.style.top.length - 2) * 1;
             this.setLinkers(el, posX, posY);
             this.updateCables(el);
+        }
+
+        fixIfConnections(elem, oldIfValues, newIfValues) {
+            // Kolejność: Góra, Prawo, Dół, Lewo
+            const side = ["Góra", "Prawo", "Dół", "Lewo"];
+
+            elem.linkers.forEach((linker, index) => {
+
+                if(!linker.used) return;
+
+                // Zapisanie danych połączeń
+                
+
+                // Usunięcie tych połączeń z bazy danych
+
+                // Stworzenie nowych połączeń
+
+            });
         }
 
         getIfValue(el) {
