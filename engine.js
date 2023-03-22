@@ -128,19 +128,44 @@ const engine = (function() {
         fixIfConnections(elem, oldIfValues, newIfValues) {
             // Kolejność: Góra, Prawo, Dół, Lewo
             const side = ["Góra", "Prawo", "Dół", "Lewo"];
+            const cables = _(this).cables.filter(cable => Object.is(cable.from, elem.el) || Object.is(cable.to, elem.el));
+            const data = [];
 
-            elem.linkers.forEach((linker, index) => {
+            for(let linker of elem.linkers) {
+                const cableData = {};
+                linker.used = false;
 
-                if(!linker.used) return;
+                for(let cable of cables) {
+                    if(!cable.linkers.includes(linker)) continue;
 
-                // Zapisanie danych połączeń
-                
+                    cableData.ifValue = oldIfValues.true == side[elem.linkers.indexOf(linker)] ? "true" : (oldIfValues.false == side[elem.linkers.indexOf(linker)] ? "false" : "none");
+                    cableData.cable = cable;
+                    // TODO: Save The WeakMap Value
+                }
 
-                // Usunięcie tych połączeń z bazy danych
+                if(cableData.ifValue != null) data.push(cableData);
+            }
 
-                // Stworzenie nowych połączeń
+            for(let i = 0; i < data.length; i++) {
+                if(data[i].ifValue == "none") {
+                    const availableSide = side.filter(thisSide => !Object.values(newIfValues).includes(thisSide))[0];
+                    elem.linkers[side.indexOf(availableSide)].used = true;
+                    // TODO: WeakMap
+                    data[i].cable.linkers[1] = elem.linkers[side.indexOf(availableSide)];
+                } else if(data[i].ifValue == "true") {
+                    const availableSide = side.find(thisSide => thisSide == newIfValues.true);
+                    elem.linkers[side.indexOf(availableSide)].used = true;
+                    // TODO: WeakMap
+                    data[i].cable.linkers[0] = elem.linkers[side.indexOf(availableSide)];
+                } else {
+                    const availableSide = side.find(thisSide => thisSide == newIfValues.false);
+                    elem.linkers[side.indexOf(availableSide)].used = true;
+                    // TODO: WeakMap
+                    data[i].cable.linkers[0] = elem.linkers[side.indexOf(availableSide)];
+                }
+            }
 
-            });
+            this.updateCables(elem.el);
         }
 
         getIfValue(el) {
@@ -338,7 +363,7 @@ const engine = (function() {
             const validateConn = (isLinker1, side) => {
                 if((isLinker1 && from.className != "if") || (!isLinker1 && to.className != "if")) return true;
 
-                if(isLinker1 && fromIfValue.false != side && fromIfValue.true != side) return false;
+                if(isLinker1 && (fromIfValue.false != side || fromIfValue.true != side)) return false;
                 if(!isLinker1 && (toIfValue.false == side || toIfValue.true == side)) return false;
 
                 return true;
@@ -552,6 +577,7 @@ const engine = (function() {
 
             const last = cableSet.cable[cableSet.cableConnections.get(linker1).cableIndex];
             const cable = cableSet.cable[cableSet.cableConnections.get(linker1).cableIndex + 1];
+            // FIXME: cable powyżej robi się undefined, powodem może być zły cableIndex czy coś
             const linker2 = {x: (last.x + ratio * (cable.x - last.x)), y: (last.y + ratio * (cable.y - last.y))};
             const [top, right, bottom, left] = _(this).elements.find(elem => Object.is(elem.el, el1)).linkers;
             
@@ -676,29 +702,32 @@ const engine = (function() {
         }
 
         validateCable(from, to, linker1, linker2) {
-            const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
-            const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
-            const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
-            const toIfValue = _(this).elements.find(elem => Object.is(elem.el, to)).ifValue;
-
             let ifConnections = 0;
             
             if(from.className == "stop") return false;
             if(to.className == "start") return false;
 
-            if(from.className == "if" &&
-            !((fromIfValue.false == "Lewo" && Object.is(linker1, left1)) || (fromIfValue.true == "Lewo" && Object.is(linker1, left1)) || 
-            (fromIfValue.false == "Prawo" && Object.is(linker1, right1)) || (fromIfValue.true == "Prawo" && Object.is(linker1, right1)) || 
-            (fromIfValue.false == "Góra" && Object.is(linker1, top1)) || (fromIfValue.true == "Góra" && Object.is(linker1, top1)) || 
-            (fromIfValue.false == "Dół" && Object.is(linker1, bottom1)) || (fromIfValue.true == "Dół" && Object.is(linker1, bottom1))))
-                return false;
+            if(Object.entries(to) != 0x0) {
+                const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
+                const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
+                const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
+                const toIfValue = _(this).elements.find(elem => Object.is(elem.el, to)).ifValue;
 
-            if(to.className == "if" &&
-            ((toIfValue.false == "Lewo" && Object.is(linker2, left2)) || (toIfValue.true == "Lewo" && Object.is(linker2, left2)) || 
-            (toIfValue.false == "Prawo" && Object.is(linker2, right2)) || (toIfValue.true == "Prawo" && Object.is(linker2, right2)) || 
-            (toIfValue.false == "Góra" && Object.is(linker2, top2)) || (toIfValue.true == "Góra" && Object.is(linker2, top2)) || 
-            (toIfValue.false == "Dół" && Object.is(linker2, bottom2)) || (toIfValue.true == "Dół" && Object.is(linker2, bottom2))))
-                return false;
+
+                if(from.className == "if" &&
+                !((fromIfValue.false == "Lewo" && Object.is(linker1, left1)) || (fromIfValue.true == "Lewo" && Object.is(linker1, left1)) || 
+                (fromIfValue.false == "Prawo" && Object.is(linker1, right1)) || (fromIfValue.true == "Prawo" && Object.is(linker1, right1)) || 
+                (fromIfValue.false == "Góra" && Object.is(linker1, top1)) || (fromIfValue.true == "Góra" && Object.is(linker1, top1)) || 
+                (fromIfValue.false == "Dół" && Object.is(linker1, bottom1)) || (fromIfValue.true == "Dół" && Object.is(linker1, bottom1))))
+                    return false;
+
+                if(to.className == "if" &&
+                ((toIfValue.false == "Lewo" && Object.is(linker2, left2)) || (toIfValue.true == "Lewo" && Object.is(linker2, left2)) || 
+                (toIfValue.false == "Prawo" && Object.is(linker2, right2)) || (toIfValue.true == "Prawo" && Object.is(linker2, right2)) || 
+                (toIfValue.false == "Góra" && Object.is(linker2, top2)) || (toIfValue.true == "Góra" && Object.is(linker2, top2)) || 
+                (toIfValue.false == "Dół" && Object.is(linker2, bottom2)) || (toIfValue.true == "Dół" && Object.is(linker2, bottom2))))
+                    return false;
+            }
 
             for(let cable of _(this).cables) {
                 if(Object.is(cable.from, from) && from.className == "if")
