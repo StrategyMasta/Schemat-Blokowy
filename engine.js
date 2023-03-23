@@ -166,6 +166,8 @@ const engine = (function() {
             }
 
             this.updateCables(elem.el);
+
+            setTimeout(() => this.updateCables(elem.el), 50);
         }
 
         getIfValue(el) {
@@ -571,8 +573,11 @@ const engine = (function() {
 
         cableConnect(el1, linker1, cableSet, ratio) {
             if(cableSet.cableConnections.get(linker1).cableIndex == cableSet.cable.length) {
-                cableSet.cableConnection.get(linker1).cableIndex--;
-                _(this).cables.find(cable => Object.is(cable, cableSet)).cableConnections.set(linker1, {cableIndex: 1});
+                const weakmap = cableSet.cableConnection.get(linker1);
+                weakmap.cableIndex--;
+
+                cableSet.cableConnection.set(linker1, weakmap);
+                // _(this).cables.find(cable => Object.is(cable, cableSet)).cableConnections.set(linker1, {cableIndex: 1});
             }
 
             const last = cableSet.cable[cableSet.cableConnections.get(linker1).cableIndex];
@@ -913,7 +918,7 @@ const engine = (function() {
                 return;
             }
             else if(data.cable.to.className != "stop") {
-                let [result, newCable] = this.evalCode(data.cable.to);
+                let [result, newCable] = data.cable.el3 ? [null, Object.assign({}, data.cable.el3)] : this.evalCode(data.cable.to);
 
                 //let newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to)));
                 let cables3 = [];
@@ -962,7 +967,7 @@ const engine = (function() {
             } else if(elem.el.className == "wypiszWpisz") {
                 if(elem.wypisz) document.getElementById("output").innerHTML += eval(elem.text);
                 else result = eval(elem.text + " = " + alert("Podaj: " + elem.text));
-            } else {
+            } else if(elem.el.className == "if") {
                 result = eval(elem.text);
                 let side;
 
