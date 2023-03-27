@@ -686,6 +686,8 @@ const engine = (function() {
                 let linker2 = this.getLinker(to, linkers);
                 let cables = [{x: linker1.x, y: linker1.y}];
                 let copy = [linker1, linker2];
+                // FIXME: Na Linijce 687 Dało Błąd Mówiący, Że linker1 To undefined
+                // Oraz Połączenie Przychodzące Podłączyło Się Do True Przed Tym
 
                 let arrow;
                 [cables, arrow, linker1, linker2] = this.createCable(linker1, linker2, from, to, cables);
@@ -715,12 +717,12 @@ const engine = (function() {
             if(from.className == "stop") return false;
             if(to.className == "start") return false;
 
-            if(Object.entries(to) != 0x0) {
+
+            if(to.className) {
                 const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
                 const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
                 const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
                 const toIfValue = _(this).elements.find(elem => Object.is(elem.el, to)).ifValue;
-
 
                 if(from.className == "if" &&
                 !((fromIfValue.false == "Lewo" && Object.is(linker1, left1)) || (fromIfValue.true == "Lewo" && Object.is(linker1, left1)) || 
@@ -979,6 +981,8 @@ const engine = (function() {
                 else if(elem.ifValue[`${!!result}`] == "Prawo") side = elem.linkers[1];
                 else if(elem.ifValue[`${!!result}`] == "Dół") side = elem.linkers[2];
                 else if(elem.ifValue[`${!!result}`] == "Lewo") side = elem.linkers[3];
+                
+                // TODO: Make A Catch Statement Here In Case The False Or True Connection Doesn't Exist
 
                 return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el) && Object.is(side, cableSet.linkers[0])))];
             }
