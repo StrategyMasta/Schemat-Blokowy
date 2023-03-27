@@ -4,20 +4,26 @@ function dragElement(el, engine) {
 
     function dragMouseDown(e) {
         e.preventDefault();
+
+        if(engine.findLinker(e.clientX, e.clientY))
+            return;
         if(el.className == "start" && document.getElementsByClassName("start").length == 2 && el.style.opacity != "1")
             return;
         if(el.className == "stop" && document.getElementsByClassName("stop").length == 2 && el.style.opacity != "1")
             return;
-        if(e.target == document.getElementById("cursor") || e.target == document.getElementById("cable") || e.target == document.getElementById("eraser"))
-            return;
-        if(document.getElementById("cursor").style.border == "none")
-            return;
+        // if(e.target == document.getElementById("cursor") || e.target == document.getElementById("cable") || e.target == document.getElementById("eraser"))
+        //     return;
+        // if(document.getElementById("cursor").style.border == "none")
+        //     return;
         if(e.target == document.getElementById("try") || e.target == document.getElementById("run") || e.target == document.getElementById("speed"))
             return;
         
         if(el.dataset.linked == "true") {
             el.style.opacity = 1;
             el.dataset.linked = false;
+            engine.setLinkers(el, el.offsetLeft, el.offsetTop);
+            engine[el.className](el);
+            engine.linker(el);
             createBlock(el.className, engine);
         }
         if(el.dataset.linked) el.style.zIndex = 2;
@@ -25,6 +31,13 @@ function dragElement(el, engine) {
         if(el.tagName == "CANVAS" && engine.usedLinkers(el)) {
             engine.needsCheck = true;
         }
+
+        // Check For New Cable Here, And Put Checking For Deleting A Cable In window.mousedown
+
+        // Check If The User Wants To Delete A Cable
+        // if(engine.getCableByDist(e.clientX, e.clientY, "delete"))
+        //     return;
+        // Check If The User Wants To Create A Cable
 
         x = e.clientX;
         y = e.clientY;
@@ -48,6 +61,7 @@ function dragElement(el, engine) {
             //aktualizowanie połączeń tutaj
 
             engine.updateCables(el);
+            engine.showCables();
         }
 
         if(el.id == "bloki") {
@@ -188,6 +202,14 @@ function changeTheme(el, engine) {
     });
 }
 
+// Check For Deleting A Cable
+function eraseEvent(engine) {
+    window.addEventListener("mousedown", function(e) {
+        if(engine.getCableByDist(e.clientX, e.clientY, "delete"))
+            return;
+    });
+}
+
 //function spellCheck(e) {
     //console.log("Changed!");
 //}
@@ -225,9 +247,9 @@ function preview(canvas, engine) {
     let linker1;
     let el1;
 
-    canvas.addEventListener("mousedown", mouseDown);
-    canvas.addEventListener("mouseup", mouseUp);
-    canvas.addEventListener("mousemove", mouseMove);
+    window.addEventListener("mousedown", mouseDown);
+    window.addEventListener("mouseup", mouseUp);
+    window.addEventListener("mousemove", mouseMove);
 
     function mouseDown(e) {
         cables = [];
@@ -292,13 +314,14 @@ function preview(canvas, engine) {
 
         engine.addCable(cables, el1, el2, arrow, [linker1, linker2]);
         engine.setUsed(linker1, linker2);
+        engine.showCables();
         cables = [];
     }
 }
 
-function erase(canvas, engine) {
-    canvas.addEventListener("click", e => engine.getCableByDist(e.clientX, e.clientY, "delete"));
-}
+// function erase(canvas, engine) {
+//     canvas.addEventListener("click", e => engine.getCableByDist(e.clientX, e.clientY, "delete"));
+// }
 
 function createBlock(type, engine) {
     const el = document.createElement("CANVAS");

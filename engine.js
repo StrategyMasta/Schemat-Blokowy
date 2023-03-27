@@ -123,6 +123,7 @@ const engine = (function() {
             const posY = el.style.top.slice(0, el.style.top.length - 2) * 1;
             this.setLinkers(el, posX, posY);
             this.updateCables(el);
+            this.showCables();
         }
 
         fixIfConnections(elem, oldIfValues, newIfValues) {
@@ -166,8 +167,9 @@ const engine = (function() {
             }
 
             this.updateCables(elem.el);
+            this.showCables();
 
-            setTimeout(() => this.updateCables(elem.el), 50);
+            setTimeout(() => {this.updateCables(elem.el); this.showCables();}, 50);
         }
 
         getIfValue(el) {
@@ -511,7 +513,8 @@ const engine = (function() {
                                 this.deleteCableConnections(cableSet);
                                 
                                 _(this).cables.splice(_(this).cables.indexOf(cableSet), 1);
-                                return;
+                                this.showCables();
+                                return true;
                             }
 
                             const connDist = Math.sqrt(((x - last.x) ** 2 + (y - last.y) ** 2) - (this.calcDistFromPointToLine(a, b, {x, y}) ** 2));
@@ -981,6 +984,62 @@ const engine = (function() {
             }
 
             return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el)))];
+        }
+
+        export() {
+            const exportData = {
+                elements: [],
+                cables: [],
+                linkers: [],
+                blocks: []
+            };
+
+            for(let element of _(this).elements) {
+                if(element.el.dataset.linked == "true") continue;
+
+                exportData.blocks.push(element.el);
+                exportData.elements.push({
+                    el: element.el.className,
+                    text: element.text,
+                    ifValue: element.ifValue,
+                    wypisz: element.wypisz,
+                    linkers: element.linkers,
+                    left: element.el.style.left,
+                    top: element.el.style.top
+                });
+
+                for(let linker of element.linkers)
+                    exportData.linkers.push(linker);
+            }
+
+            for(let cableSet of _(this).cables) {
+                const from = exportData.blocks.indexOf(cableSet.from);
+                const to = exportData.blocks.indexOf(cableSet.to);
+                const linker1 = exportData.linkers.indexOf(cableSet.linkers[0]);
+                const linker2 = exportData.linkers.indexOf(cableSet.linkers[1]);
+                const el3 = cableSet.el3 ? _(this).cables.indexOf(cableSet.el3) : undefined;
+
+                exportData.cables.push({
+                    cable: cableSet.cable,
+                    from,
+                    to,
+                    arrow: cableSet.arrow,
+                    linkers: [linker1, linker2],
+                    crosses: cableSet.crosses,
+                    connections: cableSet.connections,
+                    cableConnections: cableSet.cableConnections,
+                    ratio: cableSet.ratio,
+                    el3
+                });
+            }
+
+            exportData.blocks = undefined;
+            exportData.linkers = undefined;
+
+            // Zapisywanie Danych
+
+            // Zapisanie Do LocalStorage
+            // localStorage.setItem("export", JSON.stringify(exportData));
         }
 
         arrow(canvas) {

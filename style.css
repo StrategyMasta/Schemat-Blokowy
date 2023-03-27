@@ -71,7 +71,7 @@ body {
     color: var(--theme-fore);
     background-color: var(--theme-back);
     display: none;
-    z-index: 3;
+    z-index: 5;
 }
 
 #text {
@@ -129,11 +129,12 @@ hr {
 }
 
 canvas {
-    cursor: grab;
+    cursor: pointer;
 }
 
 canvas:active {
     cursor: grabbing;
+    z-index: 3 !important;
 }
 
 #buttons {
@@ -163,7 +164,7 @@ canvas:active {
     position: absolute;
     pointer-events: none;
     cursor: pointer;
-    z-index: 0;
+    z-index: 4;
 }
 
 #theme {
