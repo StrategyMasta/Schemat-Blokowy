@@ -210,6 +210,11 @@ function eraseEvent(engine) {
     });
 }
 
+function setImportAndExport(importEl, exportEl, engine) {
+    importEl.addEventListener("click", function() { engine.import(createBlock, deleteBlock)});
+    exportEl.addEventListener("click", function() { engine.export() });
+}
+
 //function spellCheck(e) {
     //console.log("Changed!");
 //}
@@ -345,5 +350,6 @@ function createBlock(type, engine) {
 function deleteBlock(el, engine) {
     engine.removeCables(el);
     engine.removeElement(el);
+    engine.showCables();
     document.body.removeChild(el);
 }

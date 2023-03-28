@@ -203,9 +203,9 @@ const engine = (function() {
                 this[el.id](el);
             }
 
-            this.cursor(document.getElementById("cursor"));
-            this.arrow(document.getElementById("cable"));
-            this.eraser(document.getElementById("eraser"));
+            // this.cursor(document.getElementById("cursor"));
+            // this.arrow(document.getElementById("cable"));
+            // this.eraser(document.getElementById("eraser"));
         }
 
         calcLineFunc(p1, p2) {
@@ -1043,7 +1043,64 @@ const engine = (function() {
             // Zapisywanie Danych
 
             // Zapisanie Do LocalStorage
-            // localStorage.setItem("export", JSON.stringify(exportData));
+            localStorage.setItem("export", JSON.stringify(exportData));
+        }
+
+        import(createBlock, deleteBlock) {
+            // Usuwanie Wszystkiego Co Już Jest Na Ekranie
+            for(let element of _(this).elements)
+                if(element.el.dataset.linked == "false")
+                    deleteBlock(element.el, this);
+
+
+            // Pobieranie Danych
+            const importData = JSON.parse(localStorage.getItem("export"));
+            const blocks = [];
+            const linkers = [];
+
+            if(!importData) return;
+
+            for(let element of importData.elements) {
+                createBlock(element.el, this);
+
+                const elem = _(this).elements[_(this).elements.length - 1];
+                const posX = element.left.slice(0, element.left.length - 2) * 1;
+                const posY = element.top.slice(0, element.top.length - 2) * 1;
+                elem.el.style.opacity = 1;
+                elem.el.dataset.linked = false;
+                this.setLinkers(elem.el, posX, posY);
+                this[elem.el.className](elem.el);
+                this.linker(elem.el);
+
+                elem.text = element.text;
+                elem.ifValue = element.ifValue;
+                elem.wypisz = element.wypisz;
+                elem.linkers = element.linkers;
+                elem.el.style.left = element.left;
+                elem.el.style.top = element.top;
+
+                if(elem.text || elem.el.className == "if")
+                    this.setText(elem.el, elem.text, elem.ifValue.false != "Lewo" || elem.ifValue.true != "Prawo" ? elem.ifValue : {});
+                
+                blocks.push(elem.el);
+                linkers.push(...element.linkers);
+            }
+
+
+            for(let cableSet of importData.cables) {
+                // Create Cable
+                this.addCable(cableSet.cable, blocks[cableSet.from], blocks[cableSet.to], cableSet.arrow, [linkers[cableSet.linkers[0]], linkers[cableSet.linkers[1]]]);
+                this.setUsed(linkers[cableSet.linkers[0]], !cableSet.el3 ? linkers[cableSet.linkers[1]] : null);
+                this.showCables();
+
+                const thisCable = _(this).cables[_(this).cables.length - 1];
+                thisCable.crosses = cableSet.crosses;
+                thisCable.connections = cableSet.connections;
+                thisCable.cableConnections = cableSet.cableConnections;
+                thisCable.ratio = cableSet.ratio;
+
+                if(cableSet.el3) thisCable.el3 = importData.cables[cableSet.el3];
+            }
         }
 
         arrow(canvas) {

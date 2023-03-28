@@ -13,6 +13,8 @@
     const try1 = document.getElementById("try");
     const run = document.getElementById("run");
     const speed = document.getElementById("speed");
+    const importEl = document.getElementById("import");
+    const exportEl = document.getElementById("export");
     //const text = document.getElementById("text");
 
     // cursor.width = 100;
@@ -33,6 +35,7 @@
 
     preview(previewC, Engine);
     eraseEvent(Engine);
+    setImportAndExport(importEl, exportEl, Engine);
     // erase(cables, Engine);
     changeTheme(theme, Engine);
     tryCode(try1, Engine);
