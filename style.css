@@ -59,7 +59,7 @@ body {
     height: 400px;
 }
 
-#input {
+#input, #saves {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -74,7 +74,7 @@ body {
     z-index: 5;
 }
 
-#text {
+#text, #exportName {
     width: 100%;
     height: 80%;
     font-size: 1.8em;
@@ -86,17 +86,21 @@ body {
     resize: none;
 }
 
-#input div {
+#input div, #buttonWrapper {
     height: 15%;
     gap: 10%;
     flex-direction: row;
+}
+
+#buttonWrapper {
+    height: 50%;
 }
 
 select {
     border: 1px solid var(--theme-fore);
 }
 
-#potwierdz, #anuluj{
+#potwierdz, #anuluj, #confirmExport, #anuluj3{
     width: 40%;
     height: 80%;
     border: 1px solid var(--theme-fore);
@@ -106,8 +110,53 @@ select {
     cursor: pointer;
 }
 
-#potwierdz:hover, #anuluj:hover {
+#potwierdz:hover, #anuluj:hover, #confirmExport:hover, #anuluj3:hover {
     background-color: var(--theme-buttons-hover);
+}
+
+.save, #anuluj2 {
+    width: calc(100% - 14px);
+    height: calc(20% - 8.75px);
+    margin: 7px;
+    border: 3px dashed var(--theme-fore);
+    border-radius: 10px;
+    font-family: 'Oxanium';
+    font-size: 22px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.save:hover, #anuluj2:hover {
+    background-color: var(--theme-buttons-hover);
+}
+
+#anuluj2 {
+    width: 50%;
+    margin: 7px auto;
+    border: 3px solid var(--theme-fore);
+}
+
+#confirmWrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50vw;
+    height: 40vh;
+    border: 2px solid var(--theme-fore);
+    border-radius: 10px;
+    background-color: var(--theme-back);
+    color: var(--theme-fore);
+    padding: 10px;
+    display: none;
+    z-index: 5;
+}
+
+#exportName {
+    height: 50%;
 }
 
 h2 {
@@ -167,9 +216,22 @@ canvas:active {
     z-index: 4;
 }
 
+#cables {
+    z-index: 0;
+}
+
 #import, #export {
     width: 40%;
     height: 50px;
+    margin: 3px;
+    border: 1px solid var(--theme-fore);
+    background-color: var(--theme-back);
+    color: var(--theme-fore);
+    cursor: pointer;
+}
+
+#import:hover, #export:hover {
+    background-color: var(--theme-buttons-hover);
 }
 
 #theme {

@@ -5,11 +5,21 @@ function dragElement(el, engine) {
     function dragMouseDown(e) {
         e.preventDefault();
 
+        if(e.button == 2 && el.dataset.linked == "true")
+            return;
+        if(e.button == 2 && el.tagName == "CANVAS") {
+            deleteBlock(el, engine);
+            el = undefined;
+            return;
+        }
+
         if(engine.findLinker(e.clientX, e.clientY))
             return;
         if(el.className == "start" && document.getElementsByClassName("start").length == 2 && el.style.opacity != "1")
             return;
         if(el.className == "stop" && document.getElementsByClassName("stop").length == 2 && el.style.opacity != "1")
+            return;
+        if(e.target == document.getElementById("import") || e.target == document.getElementById("export"))
             return;
         // if(e.target == document.getElementById("cursor") || e.target == document.getElementById("cable") || e.target == document.getElementById("eraser"))
         //     return;
@@ -29,7 +39,8 @@ function dragElement(el, engine) {
         if(el.dataset.linked) el.style.zIndex = 2;
 
         if(el.tagName == "CANVAS" && engine.usedLinkers(el)) {
-            engine.needsCheck = true;
+            // engine.needsCheck = true;
+            engine.showCables();
         }
 
         // Check For New Cable Here, And Put Checking For Deleting A Cable In window.mousedown
@@ -46,6 +57,7 @@ function dragElement(el, engine) {
     }
   
     function elementDrag(e) {
+        if(!el) return;
         e.preventDefault();
         posX = x - e.clientX;
         posY = y - e.clientY;
@@ -76,9 +88,12 @@ function dragElement(el, engine) {
     }
   
     function closeDragElement() {
+        if(!el) return;
         if(el.style.zIndex == 2) el.style.zIndex = -1;
-        if(el.tagName == "CANVAS" && engine.usedLinkers(el))
-            engine.needsCheck = true;
+        if(el.tagName == "CANVAS" && engine.usedLinkers(el)) {
+            // engine.needsCheck = true;
+            engine.showCables();
+        }
 
         const elPos = el.getBoundingClientRect();
         const trash = document.getElementById("trash").getBoundingClientRect();
@@ -204,15 +219,53 @@ function changeTheme(el, engine) {
 
 // Check For Deleting A Cable
 function eraseEvent(engine) {
-    window.addEventListener("mousedown", function(e) {
-        if(engine.getCableByDist(e.clientX, e.clientY, "delete"))
-            return;
+    document.addEventListener("mousedown", function(e) {
+        if(e.button == 2) {
+            e.preventDefault();
+            if(engine.getCableByDist(e.clientX, e.clientY, "delete"))
+                return;
+        }
     });
 }
 
-function setImportAndExport(importEl, exportEl, engine) {
-    importEl.addEventListener("click", function() { engine.import(createBlock, deleteBlock)});
-    exportEl.addEventListener("click", function() { engine.export() });
+function setImport(el, engine) {
+    const index = [...document.getElementsByClassName("save")].indexOf(el);
+    const saveEl = document.getElementById("saves");
+
+    saveEl.style.display = "none";
+    engine.import(createBlock, deleteBlock, index);
+}
+
+function setExport(el, engine) {
+    const index = [...document.getElementsByClassName("save")].indexOf(el);
+    const saveEl = document.getElementById("saves");
+    const exportEl = document.getElementById("confirmWrapper");
+    const confirmEl = document.getElementById("confirmExport");
+    const exportNameEl = document.getElementById("exportName");
+    
+    exportNameEl.value = "";
+    exportEl.style.display = "inline";
+    confirmEl.onclick = function() {
+        saveEl.style.display = "none";
+        exportEl.style.display = "none";
+        setExportName(index, exportNameEl.value);
+        updateExportNames();
+        engine.export(index);
+    }
+}
+
+function setExportName(index, name) {
+    localStorage.setItem(`exportName${index}`, name);
+}
+
+function getExportNames(index) {
+    return localStorage.getItem(`exportName${index}`);
+}
+
+function updateExportNames() {
+    const saveEls = document.getElementsByClassName("save");
+
+    [...saveEls].forEach((el, index) => el.innerText = getExportNames(index) ? getExportNames(index) : `Zapis ${index + 1}`);
 }
 
 //function spellCheck(e) {

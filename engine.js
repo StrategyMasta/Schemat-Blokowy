@@ -76,8 +76,9 @@ const engine = (function() {
             for(let cable of cables)
                 _(this).cables.splice(_(this).cables.indexOf(cable), 1);
             
-            this.needsCheck = true;
-            setTimeout(() => this.needsCheck = false, 50);
+            // this.needsCheck = true;
+            this.showCables();
+            setTimeout(() => { this.showCables(); }, 50);
         }
 
         removeElement(el) {
@@ -202,6 +203,8 @@ const engine = (function() {
             for(let el of document.getElementsByClassName("wrapper")[0].children) {
                 this[el.id](el);
             }
+
+            this.showCables();
 
             // this.cursor(document.getElementById("cursor"));
             // this.arrow(document.getElementById("cable"));
@@ -572,6 +575,8 @@ const engine = (function() {
 
             _(this).cables[_(this).cables.length - 1].ratio = ratio;
             _(this).cables[_(this).cables.length - 1].el3 = cableSet;
+
+            this.showCables();
         }
 
         cableConnect(el1, linker1, cableSet, ratio) {
@@ -782,7 +787,7 @@ const engine = (function() {
         }
 
         crossCheck(last, cable, cableSet, ctx) {
-            if(_(this).changed && last.y == cable.y) {
+            if(last.y == cable.y) {
                 const crosses = [];
 
                 for(let cableSet2 of _(this).cables) {
@@ -802,7 +807,7 @@ const engine = (function() {
                             {
                                 crosses.push({cable, cable2});
                                 break;
-                        }
+                            }
                         
                         last2 = cable2;
                     }
@@ -967,13 +972,17 @@ const engine = (function() {
             const elem = _(this).elements.find(el2 => Object.is(el2.el, el));
             let result = null;
 
+            function run(text) {
+                return eval(text);
+            }
+
             if(elem.el.className == "poleObliczeniowe") {
-                result = eval(elem.text);
+                result = run(elem.text);
             } else if(elem.el.className == "wypiszWpisz") {
-                if(elem.wypisz) document.getElementById("output").innerHTML += eval(elem.text);
-                else result = eval(elem.text + " = " + alert("Podaj: " + elem.text));
+                if(elem.wypisz) document.getElementById("output").innerHTML += run(elem.text);
+                else result = run(elem.text + " = " + alert("Podaj: " + elem.text));
             } else if(elem.el.className == "if") {
-                result = eval(elem.text);
+                result = run(elem.text);
                 let side;
 
                 //[top, right, bottom, left]
@@ -990,7 +999,7 @@ const engine = (function() {
             return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el)))];
         }
 
-        export() {
+        export(save) {
             const exportData = {
                 elements: [],
                 cables: [],
@@ -1031,7 +1040,7 @@ const engine = (function() {
                     linkers: [linker1, linker2],
                     crosses: cableSet.crosses,
                     connections: cableSet.connections,
-                    cableConnections: cableSet.cableConnections,
+                    cableConnections: cableSet.cableConnections.get(cableSet.linkers[0]),
                     ratio: cableSet.ratio,
                     el3
                 });
@@ -1043,18 +1052,19 @@ const engine = (function() {
             // Zapisywanie Danych
 
             // Zapisanie Do LocalStorage
-            localStorage.setItem("export", JSON.stringify(exportData));
+            localStorage.setItem(`export${save}`, JSON.stringify(exportData));
         }
 
-        import(createBlock, deleteBlock) {
+        import(createBlock, deleteBlock, save) {
             // Usuwanie Wszystkiego Co Już Jest Na Ekranie
-            for(let element of _(this).elements)
-                if(element.el.dataset.linked == "false")
-                    deleteBlock(element.el, this);
-
+            for(let i = 0; i < _(this).elements.length; i++)
+                if(_(this).elements[i].el.dataset.linked == "false") {
+                    deleteBlock(_(this).elements[i].el, this);
+                    i--;
+                }
 
             // Pobieranie Danych
-            const importData = JSON.parse(localStorage.getItem("export"));
+            const importData = JSON.parse(localStorage.getItem(`export${save}`));
             const blocks = [];
             const linkers = [];
 
@@ -1096,7 +1106,8 @@ const engine = (function() {
                 const thisCable = _(this).cables[_(this).cables.length - 1];
                 thisCable.crosses = cableSet.crosses;
                 thisCable.connections = cableSet.connections;
-                thisCable.cableConnections = cableSet.cableConnections;
+                thisCable.cableConnections = new WeakMap();
+                thisCable.cableConnections.set(linkers[cableSet.linkers[0]], cableSet.cableConnections);
                 thisCable.ratio = cableSet.ratio;
 
                 if(cableSet.el3) thisCable.el3 = importData.cables[cableSet.el3];

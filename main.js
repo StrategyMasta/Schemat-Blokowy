@@ -15,6 +15,8 @@
     const speed = document.getElementById("speed");
     const importEl = document.getElementById("import");
     const exportEl = document.getElementById("export");
+    const anuluj2 = document.getElementById("anuluj2");
+    const anuluj3 = document.getElementById("anuluj3");
     //const text = document.getElementById("text");
 
     // cursor.width = 100;
@@ -35,15 +37,52 @@
 
     preview(previewC, Engine);
     eraseEvent(Engine);
-    setImportAndExport(importEl, exportEl, Engine);
+    // setImportAndExport(importEl, exportEl, Engine);
     // erase(cables, Engine);
     changeTheme(theme, Engine);
     tryCode(try1, Engine);
+
+    updateExportNames();
 
     // Engine.arrow(cable);
     // Engine.cursor(cursor);
     // Engine.eraser(eraser);
 
+    importEl.addEventListener("click", function() {
+        const saves = document.getElementById("saves");
+        saves.style.display = saves.style.display = "inline";
+        saves.dataset.type = "import";
+    });
+
+    exportEl.addEventListener("click", function() {
+        const saves = document.getElementById("saves");
+        saves.style.display = saves.style.display = "inline";
+        saves.dataset.type = "export";
+    });
+
+    anuluj2.addEventListener("click", function() {
+        const saves = document.getElementById("saves");
+        saves.style.display = "none";
+    });
+
+    anuluj3.addEventListener("click", function() {
+        const confirmWrapper = document.getElementById("confirmWrapper");
+        confirmWrapper.style.display = "none";
+    });
+
+    const saveEls = document.getElementsByClassName("save");
+
+    [...saveEls].forEach(el => el.addEventListener("click", function() {
+        el.parentElement.dataset.type == "import" ? setImport(el, Engine) : setExport(el, Engine);
+    }));
+
+    window.addEventListener("resize", function() {
+        previewC.width = innerWidth;
+        previewC.height = innerHeight;
+        cables.width = innerWidth;
+        cables.height = innerHeight;
+        Engine.showCables();
+    });
 
     // function animate() {
     //     Engine.showCables();

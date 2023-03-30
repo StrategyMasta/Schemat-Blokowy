@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" oncontextmenu="return false;">
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -57,6 +57,23 @@
     <div class="wrapper">
         <button id="potwierdz">Potwierdź</button>
         <button id="anuluj">Anuluj</button>
+    </div>
+</div>
+
+<div id="saves" data-type="export">
+    <div class="save">Zapis 1</div>
+    <div class="save">Zapis 2</div>
+    <div class="save">Zapis 3</div>
+    <div class="save">Zapis 4</div>
+    <div id="anuluj2">Anuluj</div>
+</div>
+
+<div id="confirmWrapper">
+    <textarea id="exportName" maxlength="30" placeholder="Wpisz nazwę zapisu"></textarea>
+
+    <div id="buttonWrapper" class="wrapper">
+        <button id="confirmExport">Potwierdź</button>
+        <button id="anuluj3">Anuluj</button>
     </div>
 </div>
 
