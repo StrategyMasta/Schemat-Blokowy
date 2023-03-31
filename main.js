@@ -30,9 +30,9 @@
     previewC.width = innerWidth;
     previewC.height = innerHeight;
 
-    dragElement(bloki, Engine);
-    dragElement(tools, Engine);
-    dragElement(output, Engine);
+    // dragElement(bloki, Engine);
+    // dragElement(tools, Engine);
+    // dragElement(output, Engine);
     dragElement(trash, Engine);
 
     preview(previewC, Engine);

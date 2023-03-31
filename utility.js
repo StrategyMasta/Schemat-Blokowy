@@ -97,7 +97,15 @@ function dragElement(el, engine) {
 
         const elPos = el.getBoundingClientRect();
         const trash = document.getElementById("trash").getBoundingClientRect();
-        if(
+
+        if(el.tagName == "CANVAS" && ((elPos.x + elPos.width/2 < 203 && elPos.y + elPos.height/2 < 703) || 
+        (elPos.x + elPos.width/2 > innerWidth - 303 && elPos.y + elPos.height/2 < 506)))
+            deleteBlock(el, engine);
+        else if(elPos.x + elPos.width/2 <= 0 || elPos.y + elPos.height/2 <= 0 || elPos.x + elPos.width/2 >= innerWidth || elPos.y + elPos.height/2 >= innerHeight) {
+            if(el.tagName == "CANVAS") deleteBlock(el, engine);
+            else el.style.inset = "";
+        }
+        else if(
             el.tagName == "CANVAS" && 
             Math.sqrt((elPos.x + elPos.width/2 - (trash.x + trash.width/2)) ** 2 + 
             (elPos.y + elPos.height/2 - (trash.y + trash.height/2)) ** 2) <= 80
