@@ -6,18 +6,24 @@
 }
 
 @font-face {
-    font-family: Oxanium;
+    font-family: 'Oxanium';
     src: url(fonts/Oxanium-VariableFont_wght.ttf);
 }
 
+@keyframes fadeOut {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 :root {
-    --theme-back: #fff;
-    --theme-fore: #000;
-    --theme-shadow: #555;
+    --theme-back: #222;
+    --theme-fore: #fff;
+    --theme-shadow: #aaa;
     --theme-shadow2: rgba(55, 55, 55, 0.7);
-    --theme-buttons: #ddd;
-    --theme-buttons-hover: #ccc;
-    --theme-footer: #333;
+    --theme-buttons: #222;
+    --theme-buttons-hover: #333;
+    --theme-footer: #ccc;
 }
 
 body {
@@ -53,7 +59,7 @@ body {
 }
 
 #output {
-    top: 106px;
+    /* top: 106px; */
     left: calc(100% - 303px);
     width: 300px;
     height: 400px;
@@ -86,7 +92,7 @@ body {
     resize: none;
 }
 
-#input div, #buttonWrapper {
+#input div, #buttonWrapper, #manual #content > .wrapper .wrapper {
     height: 15%;
     gap: 10%;
     flex-direction: row;
@@ -157,6 +163,178 @@ select {
 
 #exportName {
     height: 50%;
+}
+
+#manual {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40vw;
+    height: 60vh;
+    background-color: var(--theme-back);
+    color: var(--theme-fore);
+    border: 2px solid var(--theme-fore);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    z-index: 4;
+}
+
+#manual::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40vw;
+    height: 60vh;
+    border: 4px solid var(--theme-back);
+    outline: 2px solid var(--theme-fore);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+#exitManual {
+    position: absolute;
+    top: calc(50% - 30vh - 2px);
+    left: calc(50% + 20vw + 2px);
+    transform: translate(-25px, -25px);
+    width: 50px;
+    height: 50px;
+    background-color: red;
+    border: 2px solid var(--theme-fore);
+    border-radius: 50%;
+    z-index: 4;
+    cursor: pointer;
+}
+
+#exitManual::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--theme-back);
+    outline: 2px solid var(--theme-fore);
+    border-radius: 50%;
+}
+
+.cross {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 30px;
+    height: 8px;
+    background-color: white;
+}
+
+.cross:nth-child(2) {
+    transform: translate(-50%, -50%) rotate(135deg);
+}
+
+#manual hr {
+    margin: 10px auto;
+    background-color: var(--theme-fore);
+    width: 80%;
+    border: none;
+}
+
+#manual #content {
+    width: 100%;
+    height: calc(100% - 110px);
+}
+
+#manual #content img {
+    width: calc(50% - 20px);
+    margin-right: 20px;
+    float: left;
+}
+
+#manual #content > .wrapper {
+    width: 50%;
+    height: 100%;
+    gap: 10px;
+    float: left;
+}
+
+#manual #content .wrapper fieldset {
+    width: 100%;
+    height: 70%;
+
+    padding: 2px;
+
+    font-size: 24px;
+    font-family: 'Oxanium';
+
+    border: 2px solid var(--theme-fore);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-wrap: balance;
+    line-height: 150%;
+}
+
+#manual #content .wrapper fieldset legend {
+    font-size: 24px;
+    font-family: 'Oxanium';
+    margin: auto;
+}
+
+#manual #content .wrapper div {
+    width: 100%;
+    height: 30%;
+}
+
+#manual #content .wrapper div button {
+    width: 40%;
+    height: 80%;
+    border: 1px solid var(--theme-fore);
+    color: var(--theme-fore);
+    background-color: var(--theme-buttons);
+    font-size: 1.5em;
+    /* display: inline-block; */
+    cursor: pointer;
+}
+
+#manual #content .wrapper div button:hover {
+    background-color: var(--theme-buttons-hover);
+}
+
+#manual nav {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    padding: 5px;
+}
+
+#manual nav meter {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+
+    width: 100%;
+    height: 20px;
+}
+
+#escape {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    translate: -50% -5%;
+    font-size: 28px;
+    font-family: 'Oxanium';
+    color: var(--theme-fore);
+    pointer-events: none;
+    animation-duration: 2.5s;
+    animation-timing-function: ease-in-out;
+    opacity: 0;
+    z-index: 9;
 }
 
 h2 {
@@ -234,7 +412,7 @@ canvas:active {
     background-color: var(--theme-buttons-hover);
 }
 
-#theme {
+#theme, #openManual {
     position: absolute;
     top: 3px;
     left: calc(100% - 347px);
@@ -256,6 +434,13 @@ canvas:active {
     border-left: 8px solid var(--theme-fore);
     border-radius: 50%;
     transform: rotate(-75deg);
+}
+
+#openManual {
+    top: 46px;
+    font-size: 35px;
+    font-weight: 700;
+    color: var(--theme-fore);
 }
 
 #trash {

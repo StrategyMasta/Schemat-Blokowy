@@ -92,14 +92,18 @@ function dragElement(el, engine) {
         if(el.style.zIndex == 2) el.style.zIndex = -1;
         if(el.tagName == "CANVAS" && engine.usedLinkers(el)) {
             // engine.needsCheck = true;
+            engine.updateCables(el);
             engine.showCables();
         }
+
+        if(el.dataset.linked2 == "true")
+            el.dataset.linked2 = "false";
 
         const elPos = el.getBoundingClientRect();
         const trash = document.getElementById("trash").getBoundingClientRect();
 
         if(el.tagName == "CANVAS" && ((elPos.x + elPos.width/2 < 203 && elPos.y + elPos.height/2 < 703) || 
-        (elPos.x + elPos.width/2 > innerWidth - 303 && elPos.y + elPos.height/2 < 506)))
+        (elPos.x + elPos.width/2 > innerWidth - 303 && elPos.y + elPos.height/2 < 403)))
             deleteBlock(el, engine);
         else if(elPos.x + elPos.width/2 <= 0 || elPos.y + elPos.height/2 <= 0 || elPos.x + elPos.width/2 >= innerWidth || elPos.y + elPos.height/2 >= innerHeight) {
             if(el.tagName == "CANVAS") deleteBlock(el, engine);
@@ -253,6 +257,7 @@ function setExport(el, engine) {
     
     exportNameEl.value = "";
     exportEl.style.display = "inline";
+    exportNameEl.focus();
     confirmEl.onclick = function() {
         saveEl.style.display = "none";
         exportEl.style.display = "none";
@@ -280,7 +285,7 @@ function updateExportNames() {
     //console.log("Changed!");
 //}
 
-function tryCode(el, engine) {
+function runCode(el, runFast, engine) {
     const root = document.querySelector(":root");
     const output = document.getElementById("output");
 
@@ -292,8 +297,49 @@ function tryCode(el, engine) {
             <h2>Wyjście</h2>
             <hr />
         `;
-        engine.runCode(false);
+
+        engine.runCode(runFast);
     }
+}
+
+function changeSlide(isNext, slide) {
+    const content = document.getElementById("content");
+    const infoMeter = document.getElementById("infoMeter");
+    const gifSources = ["creating_blocks", "deleting_blocks", "editing_blocks", "start_stop", "wypisz_wpisz", "pole_obliczeniowe", "if", "creating_cables", "creating_cables2", "deleting_cables", "import_export", "start_program"];
+    const legends = ["Tworzenie Nowego Bloku", "Usuwanie Bloków", "Edytowanie Bloków", "Bloki Start I Stop", "Blok Wypisz/Wpisz", "Blok Pole Obliczeniowe", "Blok If", "Tworzenie Połączeń", "Tworzenie Połączeń 2", "Usuwanie Połączeń", "Import/Export", "Uruchamianie Programu"];
+    const texts = [
+        "Aby stworzyć nowe bloki, przeciągnij lewym przyciskiem myszy wybrane bloki na ekran",
+        "Aby usunąć wybrany blok, kliknij na niego prawym przyciskiem myszy lub przenieś go do kosza",
+        "Aby edytować wybrany blok, kliknij go dwukrotnie lewym przyciskiem myszy. Możesz zmieniać jego zawartość oraz ustawienia",
+        "Bloków Start i Stop nie można edytować oraz tworzyć więcej kopii niż 1. Blok Start to początek programu, a Stop jest blokiem końcowym", 
+        "Blok Wypisz/Wpisz pozwala wypisać coś na ekran oraz wpisać dane do programu. W wypadku wypisania, do bloku należy wpisać kod JavaScript, który zwróci tekst do wypisania. W wypadku wpisania proszę podać nazwę zmiennej",
+        "Blok Pole Obliczeniowe służy do uruchamiania kodu. Należy w nim wpisać walidalny kod JavaScript",
+        "Blok If to instrukcja warunkowa, wpisujesz do niego kod JavaScript, który służy jako warunek, a on decyduje, czy jest on prawdą, czy fałszem",
+        "Po najechaniu kursorem myszy na blok, pojawią się cztery punkty złączenia. Aby stworzyć nowe połączenie, przeciągnij lewym przyciskiem myszy z jednego punktu złączenia do drugiego z innego bloku",
+        "Aby połączyć blok z innym połączeniem, przeciągnij lewym przyciskiem myszy z wybranego punktu złączenia do dowolnego innego połączenia",
+        "Aby usunąć dane połączenie, kliknij prawym przyciskiem myszy na dowolną część kabla. W miejscu kliknięcia zostaną usunięte wszystkie kable w pobliżu paru pikseli",
+        "Aby wyexportować swój program, kliknij na przycisk 'export', wybierz jeden z czterech zapisów i nadaj mu nazwę.<br />Aby zaimportować dany program, kliknij na przycisk 'import' i wybierz jeden z czterech zapisów",
+        "Aby uruchomić swój program z animacją, kliknij przycisk 'Try'. Aby uruchomić go bez animacji, kliknij przycisk 'Run'. Aby zmienić prędkość animacji, kliknij przycisk '1x'. 'Escape' zatrzymuje program"
+    ];
+
+    if((isNext && slide == 12) || (!isNext && slide == -1))
+        return;
+    
+    // Change The GIF
+    content.children[0].src = `img/${gifSources[slide]}.gif`;
+
+    // Adjust The Font Size
+    content.children[1].children[0].style.fontSize = texts[slide].length > 120 ? '19px' : '24px';
+
+    // Change The Legend And Text
+    content.children[1].children[0].innerHTML = `
+        <legend>${legends[slide]}</legend>
+
+        ${texts[slide]}
+    `;
+
+    // Update The Meter
+    infoMeter.value += (isNext * 2 - 1) * 20;
 }
 
 function mouseOver(canvas, engine) {
@@ -319,15 +365,15 @@ function preview(canvas, engine) {
 
     function mouseDown(e) {
         cables = [];
-        cables.push({
-            x: e.clientX,
-            y: e.clientY
-        });
+        // cables.push({
+        //     x: e.clientX,
+        //     y: e.clientY
+        // });
 
         linker1 = engine.findLinker(e.clientX, e.clientY);
         el1 = engine.findElement(e.clientX, e.clientY);
 
-        if(!linker1) return;
+        if(!linker1 || el1?.dataset?.linked2 == "true") return;
 
         cables[0] = {x: linker1.x, y: linker1.y};
     }
@@ -398,6 +444,7 @@ function createBlock(type, engine) {
     el.style.opacity = 0;
     el.classList.add(type);
     el.dataset.linked = true;
+    el.dataset.linked2 = true;
 
     engine.add(el);
     engine[type](el);

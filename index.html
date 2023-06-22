@@ -32,17 +32,17 @@
         <canvas id="cable"></canvas>
         <canvas id="eraser"></canvas> -->
         <div id="buttons">
-            <button id="try">Try</button>
-            <button id="run">Run</button>
-            <button id="speed">1x</button>
+            <button id="try" title="Uruchom z animacją">Try</button>
+            <button id="run" title="Uruchom bez animacji">Run</button>
+            <button id="speed" title="Prędkość animacji">1x</button>
         </div>
     </div>
 </div>
 
-<div id="tools">
+<!-- <div id="tools">
     <h2>Zmienne</h2>
     <hr />
-</div>
+</div> -->
 
 <div id="output">
     <h2>Wyjście</h2>
@@ -69,7 +69,7 @@
 </div>
 
 <div id="confirmWrapper">
-    <textarea id="exportName" maxlength="30" placeholder="Wpisz nazwę zapisu"></textarea>
+    <textarea id="exportName" maxlength="30" placeholder="Wpisz nazwę zapisu" spellcheck="false"></textarea>
 
     <div id="buttonWrapper" class="wrapper">
         <button id="confirmExport">Potwierdź</button>
@@ -77,9 +77,47 @@
     </div>
 </div>
 
-<div id="theme">
+<div id="manual">
+    <div id="exitManual">
+        <div class="cross"></div>
+        <div class="cross"></div>
+    </div>
+
+    <h1>Instrukcja Obsługi</h1>
+    <hr />
+
+    <div id="content"></div>
+
+    <template class="content">
+        <img src="img/creating_blocks.gif" alt="gif" draggable="false" />
+
+        <div class="wrapper">
+            <fieldset>
+                <legend>Tworzenie Nowego Bloku</legend>
+
+                Aby stworzyć nowe bloki, przeciągnij
+                lewym przyciskiem myszy wybrane bloki na ekran
+            </fieldset>
+            <div class="wrapper">
+                <button>Powrót</button>
+                <button>Dalej</button>
+            </div>
+        </div>
+    </template>
+
+    <nav>
+        <meter min="1" max="240" value="20" id="infoMeter"></meter>
+    </nav>
+</div>
+
+<div id="escape">Naciśnij 'Escape', aby zatrzymać program</div>
+
+<div id="theme" title="Zmiana motywu">
     <div id="moon"></div>
 </div>
+
+<div id="openManual" title="Instrukcja obsługi">?</div>
+
 <div id="trash"><img width="100%" height="100%" src="img/trash.png" alt="trash" /></div>
 
 <footer>Made By: Maksymilian Nowak &copy;2022</footer>

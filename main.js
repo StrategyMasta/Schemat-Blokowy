@@ -1,7 +1,7 @@
 (function(){
     const Engine = new engine();
     const bloki = document.getElementById("bloki");
-    const tools = document.getElementById("tools");
+    // const tools = document.getElementById("tools");
     const output = document.getElementById("output");
     const trash = document.getElementById("trash");
     const cables = document.getElementById("cables");
@@ -17,6 +17,9 @@
     const exportEl = document.getElementById("export");
     const anuluj2 = document.getElementById("anuluj2");
     const anuluj3 = document.getElementById("anuluj3");
+    const exitManual = document.getElementById("exitManual");
+    const openManual = document.getElementById("openManual");
+    const content = document.getElementById("content");
     //const text = document.getElementById("text");
 
     // cursor.width = 100;
@@ -40,13 +43,26 @@
     // setImportAndExport(importEl, exportEl, Engine);
     // erase(cables, Engine);
     changeTheme(theme, Engine);
-    tryCode(try1, Engine);
+    runCode(try1, false, Engine);
+    runCode(run, true, Engine);
 
     updateExportNames();
 
     // Engine.arrow(cable);
     // Engine.cursor(cursor);
     // Engine.eraser(eraser);
+
+    content.appendChild(document.getElementsByClassName("content")[0].content.cloneNode(true));
+
+    // Przycisk Powrót
+    content.children[1].children[1].children[0].addEventListener("click", function() {
+        changeSlide(false, (infoMeter.value / 20) - 2);
+    });
+
+    // Przycisk Dalej
+    content.children[1].children[1].children[1].addEventListener("click", function() {
+        changeSlide(true, infoMeter.value / 20);
+    });
 
     importEl.addEventListener("click", function() {
         const saves = document.getElementById("saves");
@@ -70,11 +86,28 @@
         confirmWrapper.style.display = "none";
     });
 
+    exitManual.addEventListener("click", function() {
+        const manual = document.getElementById("manual");
+        manual.style.display = "none";
+    });
+
+    openManual.addEventListener("click", function() {
+        const manual = document.getElementById("manual");
+        manual.style.display = "block";
+    });
+
     const saveEls = document.getElementsByClassName("save");
 
     [...saveEls].forEach(el => el.addEventListener("click", function() {
         el.parentElement.dataset.type == "import" ? setImport(el, Engine) : setExport(el, Engine);
     }));
+
+    speed.addEventListener("click", function() {
+        if(Engine.getSpeed() != 8) Engine.doubleTheSpeed();
+        else Engine.resetSpeed();
+
+        speed.innerHTML = Engine.getSpeed() + "x";
+    });
 
     window.addEventListener("resize", function() {
         previewC.width = innerWidth;

@@ -11,9 +11,9 @@ const engine = (function() {
                 speed: 1,
                 changed: false,
                 colors: {
-                    fore: "#000",
-                    back: "#fff",
-                    text: "blue"
+                    fore: "#fff",
+                    back: "#222",
+                    text: "yellow"
                 }
             };
 
@@ -47,7 +47,6 @@ const engine = (function() {
                 arrow,
                 linkers,
                 crosses: [],
-                connections: [],
                 cableConnections: new WeakMap()
             });
         }
@@ -87,6 +86,18 @@ const engine = (function() {
 
         set size(s) {
             _(this).size = s;
+        }
+
+        getSpeed() {
+            return _(this).speed;
+        }
+
+        doubleTheSpeed() {
+            _(this).speed *= 2;
+        }
+
+        resetSpeed() {
+            _(this).speed = 1;
         }
 
         setSize(canvas) {
@@ -147,7 +158,7 @@ const engine = (function() {
 
                 if(cableData.ifValue != null) data.push(cableData);
             }
-
+            
             for(let i = 0; i < data.length; i++) {
                 if(data[i].ifValue == "none") {
                     const availableSide = side.filter(thisSide => !Object.values(newIfValues).includes(thisSide))[0];
@@ -157,11 +168,19 @@ const engine = (function() {
                 } else if(data[i].ifValue == "true") {
                     const availableSide = side.find(thisSide => thisSide == newIfValues.true);
                     elem.linkers[side.indexOf(availableSide)].used = true;
+                    if(data[i].cable.el3 && !Object.is(data[i].cable.linkers[0], elem.linkers[side.indexOf(availableSide)])) {
+                        data[i].cable.el3.cableConnections.set(elem.linkers[side.indexOf(availableSide)], data[i].cable.el3.cableConnections.get(data[i].cable.linkers[0]));
+                        data[i].cable.el3.cableConnections.delete(data[i].cable.linkers[0]);
+                    }
                     // TODO: WeakMap
                     data[i].cable.linkers[0] = elem.linkers[side.indexOf(availableSide)];
                 } else {
                     const availableSide = side.find(thisSide => thisSide == newIfValues.false);
                     elem.linkers[side.indexOf(availableSide)].used = true;
+                    if(data[i].cable.el3 && !Object.is(data[i].cable.linkers[0], elem.linkers[side.indexOf(availableSide)])) {
+                        data[i].cable.el3.cableConnections.set(elem.linkers[side.indexOf(availableSide)], data[i].cable.el3.cableConnections.get(data[i].cable.linkers[0]));
+                        data[i].cable.el3.cableConnections.delete(data[i].cable.linkers[0]);
+                    }
                     // TODO: WeakMap
                     data[i].cable.linkers[0] = elem.linkers[side.indexOf(availableSide)];
                 }
@@ -602,15 +621,26 @@ const engine = (function() {
 
             const copy = linker1;
 
+            // const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, el1)).ifValue;
+
+            const validateConn = () => {
+                return el1.className != "if";
+
+                // if((fromIfValue.false != side || fromIfValue.true != side)) return false;
+
+                // return true;
+            }
+
+
             if(top.y > linker2.y && linker1 == top) {}
             else if(right.x < linker2.x && linker1 == right) {}
             else if(bottom.y < linker2.y && linker1 == bottom) {}
             else if(left.x > linker2.x && linker1 == left) {}
 
-            else if(top.y > linker2.y && !top.used) linker1 = top;
-            else if(right.x < linker2.x && !right.used) linker1 = right;
-            else if(bottom.y < linker2.y && !bottom.used) linker1 = bottom;
-            else if(left.x > linker2.x && !left.used) linker1 = left;
+            else if(top.y > linker2.y && !top.used && validateConn()) linker1 = top;
+            else if(right.x < linker2.x && !right.used && validateConn()) linker1 = right;
+            else if(bottom.y < linker2.y && !bottom.used && validateConn()) linker1 = bottom;
+            else if(left.x > linker2.x && !left.used && validateConn()) linker1 = left;
 
             if(!Object.is(linker1, copy)) {
                 cableSet.cableConnections.set(linker1, cableSet.cableConnections.get(copy));
@@ -723,18 +753,21 @@ const engine = (function() {
             if(to.className == "start") return false;
 
 
+            const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
+            const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
+
+
+            if(from.className == "if" &&
+            !((fromIfValue.false == "Lewo" && Object.is(linker1, left1)) || (fromIfValue.true == "Lewo" && Object.is(linker1, left1)) || 
+            (fromIfValue.false == "Prawo" && Object.is(linker1, right1)) || (fromIfValue.true == "Prawo" && Object.is(linker1, right1)) || 
+            (fromIfValue.false == "Góra" && Object.is(linker1, top1)) || (fromIfValue.true == "Góra" && Object.is(linker1, top1)) || 
+            (fromIfValue.false == "Dół" && Object.is(linker1, bottom1)) || (fromIfValue.true == "Dół" && Object.is(linker1, bottom1))))
+                return false;
+
             if(to.className) {
-                const [top1, right1, bottom1, left1] = _(this).elements.find(elem => Object.is(elem.el, from)).linkers;
                 const [top2, right2, bottom2, left2] = _(this).elements.find(elem => Object.is(elem.el, to)).linkers;
-                const fromIfValue = _(this).elements.find(elem => Object.is(elem.el, from)).ifValue;
                 const toIfValue = _(this).elements.find(elem => Object.is(elem.el, to)).ifValue;
 
-                if(from.className == "if" &&
-                !((fromIfValue.false == "Lewo" && Object.is(linker1, left1)) || (fromIfValue.true == "Lewo" && Object.is(linker1, left1)) || 
-                (fromIfValue.false == "Prawo" && Object.is(linker1, right1)) || (fromIfValue.true == "Prawo" && Object.is(linker1, right1)) || 
-                (fromIfValue.false == "Góra" && Object.is(linker1, top1)) || (fromIfValue.true == "Góra" && Object.is(linker1, top1)) || 
-                (fromIfValue.false == "Dół" && Object.is(linker1, bottom1)) || (fromIfValue.true == "Dół" && Object.is(linker1, bottom1))))
-                    return false;
 
                 if(to.className == "if" &&
                 ((toIfValue.false == "Lewo" && Object.is(linker2, left2)) || (toIfValue.true == "Lewo" && Object.is(linker2, left2)) || 
@@ -875,37 +908,84 @@ const engine = (function() {
             }
         }
 
+        escape(e) {
+            document.body.dataset.stop = e.key == "Escape";
+        }
+
         runCode(run) {
             let cable = Object.assign({}, _(this).cables.find(cableSet => cableSet.from.className == "start"));
 
             let cables2 = [];
 
+            if(!cable?.cable) {
+                const canvas = document.getElementById("preview");
+                const ctx = canvas.getContext("2d");
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const root = document.querySelector(":root");
+                root.style.pointerEvents = "all";
+
+                return;
+            }
+
+            if(!run) {
+                const escape = document.getElementById("escape");
+
+                escape.style.animationName = "";
+                setTimeout(() => escape.style.animationName = "fadeOut", 50);
+            }
+
             for(let thisCable of cable.cable)
                 cables2.push({...thisCable});
 
             cable = Object.assign(cable, {cable: cables2});
+            // const code = this.collectCode();
+
+            // if(code == "LIMIT") {
+            //     alert("Błąd: Osiągnięto limit wykonywanego kodu");
+            //     return;
+            // }
 
             const thisData = {
                 cable,
-                cableIndex: 0
+                cableIndex: 0,
+                index: 0,
+                vars: {},
+                animate: !run
             };
 
-            if(!run) this.animateRun(thisData);
+            document.addEventListener("keydown", this.escape);
+
+            this.animateRun(thisData);
         }
 
-        animateRun(data) {
+        async animateRun(data) {
             const canvas = document.getElementById("preview");
             const ctx = canvas.getContext("2d");
 
-            if(data.cableIndex != data.cable.cable.length - 1) {
+            if(document.body.dataset.stop == "true") {
+                document.removeEventListener("keydown", this.escape);
+
+                document.body.dataset.stop = "false";
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const root = document.querySelector(":root");
+                root.style.pointerEvents = "all";
+
+                return;
+            } else if(data.animate && data.cableIndex != data.cable.cable.length - 1) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 //calculate
                 const signX = Math.sign(data.cable.cable[data.cableIndex + 1].x - data.cable.cable[data.cableIndex].x);
                 const signY = Math.sign(data.cable.cable[data.cableIndex + 1].y - data.cable.cable[data.cableIndex].y);
 
-                data.cable.cable[data.cableIndex].x += signX * 1 * _(this).speed;
-                data.cable.cable[data.cableIndex].y += signY * 1 * _(this).speed;
+                const isHorizontal = data.cable.cable[data.cableIndex].x == data.cable.cable[data.cableIndex + 1].x;
+
+                data.cable.cable[data.cableIndex].x += isHorizontal ? 0 : signX * 1 * _(this).speed;
+                data.cable.cable[data.cableIndex].y += !isHorizontal ? 0 : signY * 1 * _(this).speed;
 
                 //draw
                 ctx.beginPath();
@@ -920,7 +1000,10 @@ const engine = (function() {
                 ) {
                     data2 = {
                         cable: data.cable,
-                        cableIndex: data.cableIndex + 1
+                        cableIndex: data.cableIndex + 1,
+                        index: data.index,
+                        vars: data.vars,
+                        animate: true
                     }
                 }
 
@@ -929,6 +1012,110 @@ const engine = (function() {
             }
             else if(data.cable.to.className != "stop") {
                 let [result, newCable] = data.cable.el3 ? [null, Object.assign({}, data.cable.el3)] : this.evalCode(data.cable.to);
+                // let newCable = Object.assign({}, data.cableSets[data.index + 1]);
+                const sides = ["Góra", "Prawo", "Dół", "Lewo"];
+                let isError = false;
+                // let newCable;
+                
+                // if(data.cable.to.className == "if")
+                //     newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to) && Object.is(data.cable.to.linkers[sides.indexOf(data.cable.to.ifValue[data.code[data.index + 1]])], cableSet.linkers[0])));
+                // else
+                //     newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to)));
+
+
+                if(data.index >= 1000) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    const root = document.querySelector(":root");
+                    root.style.pointerEvents = "all";
+
+                    alert("Osiągnięto limit");
+
+                    return;
+                }
+
+                // Zmienne
+                for(let var_ of Object.entries(data.vars))
+                    window.eval(`var ${var_[0]} = ${var_[1]};`);
+
+                // TODO: Dorobić obsługę pozostałych bloków oraz może dodać zabezpieczenie
+                // TODO: na wypadek stworzenia zmiennej, która już jest tu zdefiniowana
+
+                const __KEYS__ = Object.keys(this);
+                
+                const runAndUpdate = async () => {
+                    // Run Code Here
+                    // await window.eval(`(async () => { ${ result } })()`);
+                    await window.eval(`${ result }`);
+
+                    // Update The Variables
+                    Object.entries(data.vars).forEach(item => data.vars[item[0]] = window.eval(item[0]));
+
+                    // Save New Variables
+                    if(__KEYS__.length != Object.keys(this).length)
+                        for(let key of Object.entries(this).slice(__KEYS__.length))
+                            data.vars[key[0]] = key[1];
+                }
+
+                const checkForNewVars = () => {
+                    // Save New Variables
+                    if(__KEYS__.length != Object.keys(this).length)
+                        for(let key of Object.entries(this).slice(__KEYS__.length))
+                            data.vars[key[0]] = key[1];
+                }
+                
+                if(data.cable.to.className == "wypiszWpisz") {
+                    const __ELEM__ = _(this).elements.find(el2 => Object.is(el2.el, data.cable.to));
+
+                    if(__ELEM__.wypisz) {
+                        try {
+                            await runAndUpdate();
+                        } catch(err) {
+                            alert(err);
+                            isError = true;
+                        }
+                        //checkForNewVars();
+                    } else {
+                        try {
+                            await runAndUpdate();
+                        } catch(err) {
+                            alert(err);
+                            isError = true;
+                        }
+                        //checkForNewVars();
+                    }
+                }
+                else if(data.cable.to.className == "poleObliczeniowe") {
+                    try {
+                        await runAndUpdate();
+                    } catch(err) {
+                        alert(err);
+                        isError = true;
+                    }
+                    //checkForNewVars();
+                }
+                else if(data.cable.to.className == "if") {
+                    const __ELEM__ = _(this).elements.find(el2 => Object.is(el2.el, data.cable.to));
+                    const ifResult = !!window.eval(result);
+                    const __SIDE__ = __ELEM__.linkers[sides.indexOf(__ELEM__.ifValue[`${ ifResult }`])];
+
+                    // Update The Variables
+                    Object.entries(data.vars).forEach(item => data.vars[item[0]] = window.eval(item[0]));
+
+                    newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to) && Object.is(__SIDE__, cableSet.linkers[0])));
+
+                    if(!newCable.to && !newCable.el3) alert(`BŁĄD: Do ${ifResult} nie ma podłączonego kabla`);
+                }
+
+                // Zabezpieczenie Na Wypadek Błędu
+                if(isError || newCable == undefined || (!newCable.to && !newCable.el3)) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    const root = document.querySelector(":root");
+                    root.style.pointerEvents = "all";
+
+                    return;
+                }
 
                 //let newCable = Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, data.cable.to)));
                 let cables3 = [];
@@ -951,10 +1138,16 @@ const engine = (function() {
                     cableIndex = newCable.cableConnections.get(data.cable.linkers[0]).cableIndex;
                 }
 
+                // if(newCable.cable.x)
+                // TODO: isHorizontal check and fix
+
                 //next cable
                 let newData = {
                     cable: newCable,
-                    cableIndex
+                    cableIndex,
+                    index: data.index + 1,
+                    vars: data.vars,
+                    animate: data.animate
                 };
 
                 setTimeout(() => this.animateRun(newData), 1);
@@ -970,33 +1163,68 @@ const engine = (function() {
         // Eksperymentalna Metoda
         evalCode(el) {
             const elem = _(this).elements.find(el2 => Object.is(el2.el, el));
-            let result = null;
+            let result = "";
 
-            function run(text) {
-                return eval(text);
-            }
+            // function run(text) {
+            //     let result2;
+
+            //     try {
+            //         return result2 = eval(text);
+            //     }
+            //     catch(err) {
+            //         alert("Błąd: " + err);
+
+            //         return "__ERROR175__";
+            //     }
+            //     // return eval(text);
+            // }
 
             if(elem.el.className == "poleObliczeniowe") {
-                result = run(elem.text);
+                result = elem.text;
             } else if(elem.el.className == "wypiszWpisz") {
-                if(elem.wypisz) document.getElementById("output").innerHTML += run(elem.text);
-                else result = run(elem.text + " = " + alert("Podaj: " + elem.text));
+                if(elem.wypisz) result = `document.getElementById("output").innerHTML += ${elem.text}`;
+                // else result = `elem.text + " = " + alert("Podaj: " + elem.text)`;
+                // else result = elem.text.split(",").map(item => `var ${ item.trim() } = window.eval("(() => {return " + prompt('Podaj ${ item.trim() }:') + "})()")`).join(";");
+                else result = `var ${ elem.text.trim() } = window.eval("(() => {return " + prompt('Podaj ${ elem.text.trim() }:') + "})()")`;
             } else if(elem.el.className == "if") {
-                result = run(elem.text);
-                let side;
+                // result = run(elem.text);
+                // let side;
 
-                //[top, right, bottom, left]
-                if(elem.ifValue[`${!!result}`] == "Góra") side = elem.linkers[0];
-                else if(elem.ifValue[`${!!result}`] == "Prawo") side = elem.linkers[1];
-                else if(elem.ifValue[`${!!result}`] == "Dół") side = elem.linkers[2];
-                else if(elem.ifValue[`${!!result}`] == "Lewo") side = elem.linkers[3];
+                // if(result == "__ERROR175__") return [undefined, undefined];
+
+                // //[top, right, bottom, left]
+                // if(elem.ifValue[`${!!result}`] == "Góra") side = elem.linkers[0];
+                // else if(elem.ifValue[`${!!result}`] == "Prawo") side = elem.linkers[1];
+                // else if(elem.ifValue[`${!!result}`] == "Dół") side = elem.linkers[2];
+                // else if(elem.ifValue[`${!!result}`] == "Lewo") side = elem.linkers[3];
                 
-                // TODO: Make A Catch Statement Here In Case The False Or True Connection Doesn't Exist
+                // // Make A Catch Statement Here In Case The False Or True Connection Doesn't Exist
 
-                return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el) && Object.is(side, cableSet.linkers[0])))];
+                // return [`${!!result}`, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el) && Object.is(side, cableSet.linkers[0])))];
+                return [elem.text, undefined];
             }
 
             return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el)))];
+        }
+
+        collectCode() {
+            let nextCable = Object.assign({}, _(this).cables.find(cableSet => cableSet.from.className == "start"));
+            const code = [];
+            const LIMIT = 1000;
+
+            while(code.length <= LIMIT) {
+                const [result, cableSet] = nextCable.el3 ? [null, Object.assign({}, nextCable.el3)] : this.evalCode(nextCable.to);
+
+                if(cableSet == undefined || (!cableSet.to && !cableSet.el3)) break;
+
+                nextEl = el;
+                code.push(result);
+            }
+
+            if(code.length > LIMIT)
+                return "LIMIT";
+
+            return code;
         }
 
         export(save) {
@@ -1004,7 +1232,8 @@ const engine = (function() {
                 elements: [],
                 cables: [],
                 linkers: [],
-                blocks: []
+                blocks: [],
+                cableConnections: []
             };
 
             for(let element of _(this).elements) {
@@ -1026,10 +1255,24 @@ const engine = (function() {
             }
 
             for(let cableSet of _(this).cables) {
+                if(cableSet.el3) {
+                    exportData.cableConnections.push({
+                        linker: exportData.linkers.indexOf(cableSet.linkers[0]),
+                        el3: cableSet.el3
+                    });
+                }
+            }
+
+            for(let cableSet of _(this).cables) {
                 const from = exportData.blocks.indexOf(cableSet.from);
                 const to = exportData.blocks.indexOf(cableSet.to);
                 const linker1 = exportData.linkers.indexOf(cableSet.linkers[0]);
-                const linker2 = exportData.linkers.indexOf(cableSet.linkers[1]);
+                const linker2 = cableSet.el3 ? cableSet.linkers[1] : exportData.linkers.indexOf(cableSet.linkers[1]);
+                const connectedCable = exportData.cableConnections.find(cable => Object.is(cable.el3, cableSet));
+                const cableConnections = !connectedCable ? null : {
+                    linker: connectedCable.linker,
+                    index: cableSet.cableConnections.get(exportData.linkers[connectedCable.linker]).cableIndex
+                };
                 const el3 = cableSet.el3 ? _(this).cables.indexOf(cableSet.el3) : undefined;
 
                 exportData.cables.push({
@@ -1039,15 +1282,16 @@ const engine = (function() {
                     arrow: cableSet.arrow,
                     linkers: [linker1, linker2],
                     crosses: cableSet.crosses,
-                    connections: cableSet.connections,
-                    cableConnections: cableSet.cableConnections.get(cableSet.linkers[0]),
+                    cableConnections,
                     ratio: cableSet.ratio,
                     el3
                 });
             }
 
+
             exportData.blocks = undefined;
             exportData.linkers = undefined;
+            exportData.cableConnections = undefined;
 
             // Zapisywanie Danych
 
@@ -1077,6 +1321,7 @@ const engine = (function() {
                 const posX = element.left.slice(0, element.left.length - 2) * 1;
                 const posY = element.top.slice(0, element.top.length - 2) * 1;
                 elem.el.style.opacity = 1;
+                elem.el.style.zIndex = -1;
                 elem.el.dataset.linked = false;
                 this.setLinkers(elem.el, posX, posY);
                 this[elem.el.className](elem.el);
@@ -1089,9 +1334,12 @@ const engine = (function() {
                 elem.el.style.left = element.left;
                 elem.el.style.top = element.top;
 
+                if(elem.el.className == "if")
+                    elem.el.getContext("2d").font = "20px Arial";
                 if(elem.text || elem.el.className == "if")
-                    this.setText(elem.el, elem.text, elem.ifValue.false != "Lewo" || elem.ifValue.true != "Prawo" ? elem.ifValue : {});
-                
+                    this.setText(elem.el, elem.text, {});
+                // elem.ifValue.false != "Lewo" || elem.ifValue.true != "Prawo" ? { ifValue: elem.ifValue } : {}
+
                 blocks.push(elem.el);
                 linkers.push(...element.linkers);
             }
@@ -1099,19 +1347,34 @@ const engine = (function() {
 
             for(let cableSet of importData.cables) {
                 // Create Cable
-                this.addCable(cableSet.cable, blocks[cableSet.from], blocks[cableSet.to], cableSet.arrow, [linkers[cableSet.linkers[0]], linkers[cableSet.linkers[1]]]);
-                this.setUsed(linkers[cableSet.linkers[0]], !cableSet.el3 ? linkers[cableSet.linkers[1]] : null);
+                this.addCable(cableSet.cable, blocks[cableSet.from], blocks[cableSet.to], cableSet.arrow, [linkers[cableSet.linkers[0]], (cableSet.el3 != null ? cableSet.linkers[1] : linkers[cableSet.linkers[1]])]);
+                this.setUsed(linkers[cableSet.linkers[0]], !(cableSet.el3 != null) ? linkers[cableSet.linkers[1]] : null);
                 this.showCables();
 
                 const thisCable = _(this).cables[_(this).cables.length - 1];
                 thisCable.crosses = cableSet.crosses;
-                thisCable.connections = cableSet.connections;
+                // const cableConnections = new WeakMap();
                 thisCable.cableConnections = new WeakMap();
-                thisCable.cableConnections.set(linkers[cableSet.linkers[0]], cableSet.cableConnections);
-                thisCable.ratio = cableSet.ratio;
+                if(cableSet.cableConnections) {
+                    thisCable.cableConnections.set(linkers[cableSet.cableConnections.linker], {cableIndex: cableSet.cableConnections.index});
+                }
+                // thisCable.cableConnections = cableConnections;
+                // thisCable.cableConnections.set(linkers[cableSet.linkers[0]], cableSet.cableConnections);
+                if(cableSet.ratio != null) thisCable.ratio = cableSet.ratio;
+                if(cableSet.el3 != undefined) thisCable.el3 = cableSet.el3;
 
-                if(cableSet.el3) thisCable.el3 = importData.cables[cableSet.el3];
+                // if(cableSet.el3 != undefined) thisCable.el3 = importData.cables[cableSet.el3];
             }
+
+            for(let cableSet of _(this).cables)
+                if(cableSet.el3 != undefined)
+                    cableSet.el3 = _(this).cables[cableSet.el3];
+
+            for(let elem of _(this).elements) {
+                this.updateCables(elem.el);
+            }
+
+            this.showCables();
         }
 
         arrow(canvas) {
