@@ -926,6 +926,9 @@ const engine = (function() {
                 const root = document.querySelector(":root");
                 root.style.pointerEvents = "all";
 
+                document.getElementById("try").disabled = false;
+                document.getElementById("run").disabled = false;
+
                 return;
             }
 
@@ -973,6 +976,9 @@ const engine = (function() {
 
                 const root = document.querySelector(":root");
                 root.style.pointerEvents = "all";
+
+                document.getElementById("try").disabled = false;
+                document.getElementById("run").disabled = false;
 
                 return;
             } else if(data.animate && data.cableIndex != data.cable.cable.length - 1) {
@@ -1028,6 +1034,9 @@ const engine = (function() {
 
                     const root = document.querySelector(":root");
                     root.style.pointerEvents = "all";
+
+                    document.getElementById("try").disabled = false;
+                    document.getElementById("run").disabled = false;
 
                     alert("Osiągnięto limit");
 
@@ -1114,6 +1123,9 @@ const engine = (function() {
                     const root = document.querySelector(":root");
                     root.style.pointerEvents = "all";
 
+                    document.getElementById("try").disabled = false;
+                    document.getElementById("run").disabled = false;
+
                     return;
                 }
 
@@ -1158,6 +1170,9 @@ const engine = (function() {
 
             const root = document.querySelector(":root");
             root.style.pointerEvents = "all";
+
+            document.getElementById("try").disabled = false;
+            document.getElementById("run").disabled = false;
         }
 
         // Eksperymentalna Metoda

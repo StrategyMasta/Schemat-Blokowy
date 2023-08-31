@@ -298,6 +298,10 @@ function runCode(el, runFast, engine) {
             <hr />
         `;
 
+        // Disable The Focus
+        document.getElementById("try").disabled = true;
+        document.getElementById("run").disabled = true;
+
         engine.runCode(runFast);
     }
 }
