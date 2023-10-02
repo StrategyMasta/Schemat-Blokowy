@@ -1066,12 +1066,12 @@ const engine = (function() {
                             data.vars[key[0]] = key[1];
                 }
 
-                const checkForNewVars = () => {
-                    // Save New Variables
-                    if(__KEYS__.length != Object.keys(this).length)
-                        for(let key of Object.entries(this).slice(__KEYS__.length))
-                            data.vars[key[0]] = key[1];
-                }
+                // const checkForNewVars = () => {
+                //     // Save New Variables
+                //     if(__KEYS__.length != Object.keys(this).length)
+                //         for(let key of Object.entries(this).slice(__KEYS__.length))
+                //             data.vars[key[0]] = key[1];
+                // }
                 
                 if(data.cable.to.className == "wypiszWpisz") {
                     const __ELEM__ = _(this).elements.find(el2 => Object.is(el2.el, data.cable.to));
@@ -1222,25 +1222,25 @@ const engine = (function() {
             return [result, Object.assign({}, _(this).cables.find(cableSet => Object.is(cableSet.from, elem.el)))];
         }
 
-        collectCode() {
-            let nextCable = Object.assign({}, _(this).cables.find(cableSet => cableSet.from.className == "start"));
-            const code = [];
-            const LIMIT = 1000;
+        // collectCode() {
+        //     let nextCable = Object.assign({}, _(this).cables.find(cableSet => cableSet.from.className == "start"));
+        //     const code = [];
+        //     const LIMIT = 1000;
 
-            while(code.length <= LIMIT) {
-                const [result, cableSet] = nextCable.el3 ? [null, Object.assign({}, nextCable.el3)] : this.evalCode(nextCable.to);
+        //     while(code.length <= LIMIT) {
+        //         const [result, cableSet] = nextCable.el3 ? [null, Object.assign({}, nextCable.el3)] : this.evalCode(nextCable.to);
 
-                if(cableSet == undefined || (!cableSet.to && !cableSet.el3)) break;
+        //         if(cableSet == undefined || (!cableSet.to && !cableSet.el3)) break;
 
-                nextEl = el;
-                code.push(result);
-            }
+        //         nextEl = el;
+        //         code.push(result);
+        //     }
 
-            if(code.length > LIMIT)
-                return "LIMIT";
+        //     if(code.length > LIMIT)
+        //         return "LIMIT";
 
-            return code;
-        }
+        //     return code;
+        // }
 
         export(save) {
             const exportData = {
