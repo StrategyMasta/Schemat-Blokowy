@@ -1079,6 +1079,8 @@ const engine = (function() {
                     if(__ELEM__.wypisz) {
                         try {
                             await runAndUpdate();
+                            // Automatically Scroll Down 
+                            document.getElementById("output").scrollTop = document.getElementById("output").scrollHeight;
                         } catch(err) {
                             alert(err);
                             isError = true;
@@ -1197,7 +1199,7 @@ const engine = (function() {
             if(elem.el.className == "poleObliczeniowe") {
                 result = elem.text;
             } else if(elem.el.className == "wypiszWpisz") {
-                if(elem.wypisz) result = `document.getElementById("output").innerHTML += ${elem.text}`;
+                if(elem.wypisz) result = `document.getElementById("output").children[2].innerHTML += ${elem.text}`;
                 // else result = `elem.text + " = " + alert("Podaj: " + elem.text)`;
                 // else result = elem.text.split(",").map(item => `var ${ item.trim() } = window.eval("(() => {return " + prompt('Podaj ${ item.trim() }:') + "})()")`).join(";");
                 else result = `var ${ elem.text.trim() } = window.eval("(() => {return " + prompt('Podaj ${ elem.text.trim() }:') + "})()")`;
@@ -1337,7 +1339,9 @@ const engine = (function() {
                 const posY = element.top.slice(0, element.top.length - 2) * 1;
                 elem.el.style.opacity = 1;
                 elem.el.style.zIndex = -1;
+                elem.el.style.cursor = null;
                 elem.el.dataset.linked = false;
+                elem.el.dataset.linked2 = false;
                 this.setLinkers(elem.el, posX, posY);
                 this[elem.el.className](elem.el);
                 this.linker(elem.el);

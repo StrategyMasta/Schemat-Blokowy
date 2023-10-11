@@ -96,8 +96,10 @@ function dragElement(el, engine) {
             engine.showCables();
         }
 
-        if(el.dataset.linked2 == "true")
+        if(el.dataset.linked2 == "true") {
             el.dataset.linked2 = "false";
+            el.style.cursor = null;
+        }
 
         const elPos = el.getBoundingClientRect();
         const trash = document.getElementById("trash").getBoundingClientRect();
@@ -296,6 +298,7 @@ function runCode(el, runFast, engine) {
         output.innerHTML = `
             <h2>Wyjście</h2>
             <hr />
+            <p></p>
         `;
 
         // Disable The Focus
@@ -446,6 +449,7 @@ function createBlock(type, engine) {
     el.style.left = (document.getElementById("bloki").getBoundingClientRect().left + 25) + "px";
     el.style.zIndex = 2;
     el.style.opacity = 0;
+    el.style.cursor = "grab";
     el.classList.add(type);
     el.dataset.linked = true;
     el.dataset.linked2 = true;

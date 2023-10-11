@@ -43,7 +43,7 @@ body {
     padding: 7px;
     background-color: var(--theme-back);
     color: var(--theme-fore);
-    cursor: move;
+    /* cursor: move; */
     filter: drop-shadow(4px 4px 2px var(--theme-shadow));
     z-index: 1;
 }
@@ -63,6 +63,15 @@ body {
     left: calc(100% - 303px);
     width: 300px;
     height: 400px;
+    text-wrap: balance;
+    overflow-y: auto;
+
+    container-type: inline-size;
+}
+
+#output > p {
+    font-size: 8cqi;
+    overflow-wrap: break-word;
 }
 
 #input, #saves {
@@ -360,7 +369,7 @@ canvas {
 }
 
 canvas:active {
-    cursor: grabbing;
+    cursor: grabbing !important;
     z-index: 3 !important;
 }
 
